@@ -11,7 +11,7 @@ import {
   createConnection,
   useContainer,
 } from "typeorm";
-// import SnakeNamingStrategy from "typeorm-naming-strategies";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import User from "./entities/User";
 import Account from "./entities/Account";
 import { authChecker } from "./auth-checker";
@@ -68,7 +68,7 @@ const getOptions = async () => {
       ssl: true,
     },
     entities: ["dist/entities/*.js"],
-    // namingStrategy: new SnakeNamingStrategy(),
+    namingStrategy: new SnakeNamingStrategy(),
   };
   if (process.env.DATABASE_URL) {
     Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
