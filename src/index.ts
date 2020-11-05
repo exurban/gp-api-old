@@ -5,7 +5,13 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import { buildSchema } from "type-graphql";
 import { Container } from "typedi";
-import { createConnection, useContainer } from "typeorm";
+import {
+  getConnectionOptions,
+  ConnectionOptions,
+  createConnection,
+  useContainer,
+} from "typeorm";
+// import SnakeNamingStrategy from "typeorm-naming-strategies";
 import User from "./entities/User";
 import Account from "./entities/Account";
 import { authChecker } from "./auth-checker";
@@ -51,12 +57,49 @@ const getUser = async (token: string): Promise<User | undefined> => {
   }
 };
 
+const getOptions = async () => {
+  console.log(`getting DB options`);
+  let connectionOptions: ConnectionOptions;
+  connectionOptions = {
+    type: "postgres",
+    synchronize: false,
+    logging: false,
+    extra: {
+      ssl: true,
+    },
+    entities: ["dist/entities/*.*"],
+    // namingStrategy: new SnakeNamingStrategy(),
+  };
+  if (process.env.DATABASE_URL) {
+    Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
+    console.info(`took url from ${process.env.DATABASE_URL}`);
+  } else {
+    // gets your default configuration
+    // you could get a specific config by name getConnectionOptions('production')
+    // or getConnectionOptions(process.env.NODE_ENV)
+    connectionOptions = await getConnectionOptions();
+  }
+
+  return connectionOptions;
+};
+
+const connect2Database = async (): Promise<void> => {
+  console.log(`Connecting to DB`);
+  const typeormconfig = await getOptions();
+  await createConnection(typeormconfig);
+};
+
+connect2Database().then(async () => {
+  console.log("Connected to database");
+});
+
 const main = async () => {
+  // * Connect to Database
   useContainer(Container);
-  await createConnection();
+
+  // await connect2Database();
 
   const schema = await buildSchema({
-    // resolvers: [__dirname + "/resolvers/**/*.{ts,js}"],
     resolvers: [
       __dirname + "/modules/**/*.resolver.{ts,js}",
       __dirname + "/resolvers/**/*.{ts,js}",

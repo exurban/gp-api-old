@@ -67,9 +67,34 @@ const getUser = (token) => __awaiter(void 0, void 0, void 0, function* () {
         }
     }
 });
+const getOptions = () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`getting DB options`);
+    let connectionOptions;
+    connectionOptions = {
+        type: "postgres",
+        synchronize: false,
+        logging: false,
+        entities: ["dist/entities/*.*"],
+    };
+    if (process.env.DATABASE_URL) {
+        Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
+        console.info(`took url from ${process.env.DATABASE_URL}`);
+    }
+    else {
+        connectionOptions = yield typeorm_1.getConnectionOptions();
+    }
+    return connectionOptions;
+});
+const connect2Database = () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Connecting to DB`);
+    const typeormconfig = yield getOptions();
+    yield typeorm_1.createConnection(typeormconfig);
+});
+connect2Database().then(() => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Connected to database");
+}));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     typeorm_1.useContainer(typedi_1.Container);
-    yield typeorm_1.createConnection();
     const schema = yield type_graphql_1.buildSchema({
         resolvers: [
             __dirname + "/modules/**/*.resolver.{ts,js}",
