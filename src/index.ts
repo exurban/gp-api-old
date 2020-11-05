@@ -67,7 +67,7 @@ const getOptions = async () => {
     extra: {
       ssl: true,
     },
-    entities: ["dist/entities/*.*"],
+    entities: ["dist/entities/*.js"],
     // namingStrategy: new SnakeNamingStrategy(),
   };
   if (process.env.DATABASE_URL) {
