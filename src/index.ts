@@ -117,6 +117,8 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
+    introspection: true,
+    playground: true,
     context: async ({ req }) => {
       let user;
       if (
