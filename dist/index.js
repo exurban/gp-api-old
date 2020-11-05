@@ -39,6 +39,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const type_graphql_1 = require("type-graphql");
 const typedi_1 = require("typedi");
 const typeorm_1 = require("typeorm");
+const typeorm_naming_strategies_1 = require("typeorm-naming-strategies");
 const User_1 = __importDefault(require("./entities/User"));
 const Account_1 = __importDefault(require("./entities/Account"));
 const auth_checker_1 = require("./auth-checker");
@@ -77,7 +78,8 @@ const getOptions = () => __awaiter(void 0, void 0, void 0, function* () {
         extra: {
             ssl: true,
         },
-        entities: ["dist/entities/*.*"],
+        entities: ["dist/entities/*.js"],
+        namingStrategy: new typeorm_naming_strategies_1.SnakeNamingStrategy(),
     };
     if (process.env.DATABASE_URL) {
         Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
@@ -100,7 +102,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     typeorm_1.useContainer(typedi_1.Container);
     const schema = yield type_graphql_1.buildSchema({
         resolvers: [
-            __dirname + "/modules/**/*.resolver.{ts,js}",
+            __dirname + "/entities/**/*.{ts,js}",
             __dirname + "/resolvers/**/*.{ts,js}",
         ],
         emitSchemaFile: {

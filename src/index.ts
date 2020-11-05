@@ -102,7 +102,7 @@ const main = async () => {
 
   const schema = await buildSchema({
     resolvers: [
-      __dirname + "/modules/**/*.resolver.{ts,js}",
+      __dirname + "/entities/**/*.{ts,js}",
       __dirname + "/resolvers/**/*.{ts,js}",
     ],
     emitSchemaFile: {
