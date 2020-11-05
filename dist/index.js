@@ -72,8 +72,11 @@ const getOptions = () => __awaiter(void 0, void 0, void 0, function* () {
     let connectionOptions;
     connectionOptions = {
         type: "postgres",
-        synchronize: false,
+        synchronize: true,
         logging: false,
+        extra: {
+            ssl: true,
+        },
         entities: ["dist/entities/*.*"],
     };
     if (process.env.DATABASE_URL) {
@@ -110,6 +113,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,
+        introspection: true,
+        playground: true,
         context: ({ req }) => __awaiter(void 0, void 0, void 0, function* () {
             let user;
             if (req.headers.authorization &&

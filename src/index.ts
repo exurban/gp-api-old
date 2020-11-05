@@ -62,7 +62,7 @@ const getOptions = async () => {
   let connectionOptions: ConnectionOptions;
   connectionOptions = {
     type: "postgres",
-    synchronize: false,
+    synchronize: true,
     logging: false,
     extra: {
       ssl: true,
@@ -77,6 +77,7 @@ const getOptions = async () => {
     // gets your default configuration
     // you could get a specific config by name getConnectionOptions('production')
     // or getConnectionOptions(process.env.NODE_ENV)
+
     connectionOptions = await getConnectionOptions();
   }
 
@@ -115,6 +116,8 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
+    introspection: true,
+    playground: true,
     context: async ({ req }) => {
       let user;
       if (
