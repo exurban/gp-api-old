@@ -115,6 +115,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,
+        introspection: true,
+        playground: true,
         context: ({ req }) => __awaiter(void 0, void 0, void 0, function* () {
             let user;
             if (req.headers.authorization &&
