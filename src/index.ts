@@ -97,15 +97,14 @@ connect2Database().then(async () => {
 const main = async () => {
   // * Connect to Database
   useContainer(Container);
-
-  // await connect2Database();
+  // await createConnection();
 
   const schema = await buildSchema({
     resolvers: [
-      // __dirname + "/entities/**/*.{ts,js}",
-      // __dirname + "/resolvers/**/*.{ts,js}",
-      __dirname + "/entities/*.{ts,js}",
-      __dirname + "/resolvers/*.{ts,js}",
+      __dirname + "/entities/**/*.{ts,js}",
+      __dirname + "/resolvers/**/*.{ts,js}",
+      // `${__dirname}/entities/**/*.{ts,js}`,
+      // `${__dirname}/resolvers/**/*.{ts,js}`,
     ],
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
@@ -118,8 +117,6 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
-    introspection: true,
-    playground: true,
     context: async ({ req }) => {
       let user;
       if (
@@ -141,7 +138,7 @@ const main = async () => {
   app.use(
     cors({
       credentials: true,
-      origin: "gp-app.vercel.app",
+      origin: "http://localhost:3000",
     })
   );
 

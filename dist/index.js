@@ -102,8 +102,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     typeorm_1.useContainer(typedi_1.Container);
     const schema = yield type_graphql_1.buildSchema({
         resolvers: [
-            __dirname + "/entities/*.{ts,js}",
-            __dirname + "/resolvers/*.{ts,js}",
+            __dirname + "/entities/**/*.{ts,js}",
+            __dirname + "/resolvers/**/*.{ts,js}",
         ],
         emitSchemaFile: {
             path: __dirname + "/schema.gql",
@@ -115,8 +115,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,
-        introspection: true,
-        playground: true,
         context: ({ req }) => __awaiter(void 0, void 0, void 0, function* () {
             let user;
             if (req.headers.authorization &&
@@ -131,7 +129,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = express_1.default();
     app.use(cors_1.default({
         credentials: true,
-        origin: "gp-app.vercel.app",
+        origin: "http://localhost:3000",
     }));
     apolloServer.applyMiddleware({ path: "/", app });
     app.listen(PORT, () => {
