@@ -67,7 +67,7 @@ const getOptions = async () => {
     extra: {
       ssl: true,
     },
-    entities: ["dist/entities/*.js"],
+    entities: [__dirname + "/entities/**/*.js"],
     namingStrategy: new SnakeNamingStrategy(),
   };
   if (process.env.DATABASE_URL) {
@@ -101,7 +101,7 @@ const main = async () => {
 
   const schema = await buildSchema({
     resolvers: [
-      __dirname + "/entities/*.{ts,js}",
+      // __dirname + "/entities/*.{ts,js}",
       __dirname + "/resolvers/*.{ts,js}",
       // `${__dirname}/entities/**/*.{ts,js}`,
       // `${__dirname}/resolvers/**/*.{ts,js}`,
