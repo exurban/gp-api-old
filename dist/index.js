@@ -102,8 +102,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     typeorm_1.useContainer(typedi_1.Container);
     const schema = yield type_graphql_1.buildSchema({
         resolvers: [
-            __dirname + "/entities/**/*.{ts,js}",
-            __dirname + "/resolvers/**/*.{ts,js}",
+            __dirname + "/entities/*.{ts,js}",
+            __dirname + "/resolvers/*.{ts,js}",
         ],
         emitSchemaFile: {
             path: __dirname + "/schema.gql",
