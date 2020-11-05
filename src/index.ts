@@ -56,7 +56,11 @@ const main = async () => {
   await createConnection();
 
   const schema = await buildSchema({
-    resolvers: [__dirname + "/resolvers/**/*.ts"],
+    // resolvers: [__dirname + "/resolvers/**/*.{ts,js}"],
+    resolvers: [
+      __dirname + "/modules/**/*.resolver.{ts,js}",
+      __dirname + "/resolvers/**/*.{ts,js}",
+    ],
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       commentDescriptions: true,

@@ -13,8 +13,8 @@ module.exports = {
   synchronize: true,
   logging: false,
   // entities: ["src/entities/**/*.ts"],
-  entities: ["dist/**/*.entity.js"],
-  migrations: ["src/database/migration/**/*.ts"],
-  subscribers: ["src/database/subscriber/**/*.ts"],
+  entities: ["dist/entities/*.js"],
+  migrations: ["dist/migrations/*.js"],
+  // subscribers: ["src/database/subscriber/**/*.ts"],
   namingStrategy: new SnakeNamingStrategy(),
 };
