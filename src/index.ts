@@ -64,11 +64,11 @@ const getOptions = async () => {
     type: "postgres",
     synchronize: true,
     logging: false,
+    entities: ["entities/*.js"],
+    namingStrategy: new SnakeNamingStrategy(),
     extra: {
       ssl: true,
     },
-    entities: ["./entities/*.js"],
-    namingStrategy: new SnakeNamingStrategy(),
   };
   if (process.env.DATABASE_URL) {
     Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
