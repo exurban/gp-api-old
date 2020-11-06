@@ -15,11 +15,11 @@ import {
 import { authChecker } from "./auth-checker";
 
 import Account from "./entities/Account";
-import Collection from "./entities/Collection";
-import Finish from "./entities/Finish";
-import Image from "./entities/Image";
-import Location from "./entities/Location";
-import Photo from "./entities/Photo";
+// import Collection from "./entities/Collection";
+// import Finish from "./entities/Finish";
+// import Image from "./entities/Image";
+// import Location from "./entities/Location";
+// import Photo from "./entities/Photo";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
 dotenv.config();
