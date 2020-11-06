@@ -97,7 +97,7 @@ connect2Database().then(async () => {
 const main = async () => {
   // * Connect to Database
   useContainer(Container);
-  await createConnection();
+  // await createConnection();
 
   const schema = await buildSchema({
     resolvers: [
