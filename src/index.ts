@@ -70,9 +70,9 @@ const getOptions = async () => {
     synchronize: true,
     logging: false,
     // namingStrategy: new SnakeNamingStrategy(),
-    extra: {
-      ssl: true,
-    },
+    // extra: {
+    //   ssl: true,
+    // },
     entities: ["src/entities{.ts,.js}", "dist/entities{.ts,.js}"],
   };
   if (process.env.DATABASE_URL) {
