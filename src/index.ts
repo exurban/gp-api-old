@@ -11,15 +11,10 @@ import {
   createConnection,
   useContainer,
 } from "typeorm";
-// import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
 import Account from "./entities/Account";
-// import Collection from "./entities/Collection";
-// import Finish from "./entities/Finish";
-// import Image from "./entities/Image";
-// import Location from "./entities/Location";
-// import Photo from "./entities/Photo";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -69,10 +64,7 @@ const getOptions = async () => {
     type: "postgres",
     synchronize: true,
     logging: false,
-    // namingStrategy: new SnakeNamingStrategy(),
-    // extra: {
-    //   ssl: true,
-    // },
+    namingStrategy: new SnakeNamingStrategy(),
     entities: ["dist/entities/*{.ts,.js}"],
   };
   if (process.env.DATABASE_URL) {
