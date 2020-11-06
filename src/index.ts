@@ -73,7 +73,7 @@ const getOptions = async () => {
     extra: {
       ssl: true,
     },
-    entities: [Account, Collection, Finish, Image, Location, Photo],
+    entities: ["src/entities{.ts,.js}", "dist/entities{.ts,.js}"],
   };
   if (process.env.DATABASE_URL) {
     Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
