@@ -11,7 +11,7 @@ import {
   createConnection,
   useContainer,
 } from "typeorm";
-import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+// import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
 import Account from "./entities/Account";
@@ -69,7 +69,7 @@ const getOptions = async () => {
     type: "postgres",
     synchronize: true,
     logging: false,
-    namingStrategy: new SnakeNamingStrategy(),
+    // namingStrategy: new SnakeNamingStrategy(),
     extra: {
       ssl: true,
     },
@@ -77,7 +77,6 @@ const getOptions = async () => {
   };
   if (process.env.DATABASE_URL) {
     Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
-    console.info(`took url from ${process.env.DATABASE_URL}`);
   } else {
     // gets your default configuration
     // you could get a specific config by name getConnectionOptions('production')
