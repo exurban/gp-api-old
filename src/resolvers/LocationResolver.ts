@@ -48,6 +48,7 @@ export default class LocationResolver {
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+      .leftJoinAndSelect("p.images", "i")
       .getMany();
     console.log(`LOCATIONS: ${JSON.stringify(locations, null, 2)}`);
     return locations;

@@ -64,7 +64,7 @@ const getOptions = async () => {
     type: "postgres",
     synchronize: true,
     logging: false,
-    entities: ["entities/*.js"],
+    entities: ["dist/entities/*.{ts,js}"],
     namingStrategy: new SnakeNamingStrategy(),
     extra: {
       ssl: true,
@@ -97,7 +97,7 @@ connect2Database().then(async () => {
 const main = async () => {
   // * Connect to Database
   useContainer(Container);
-  // await createConnection();
+  await createConnection();
 
   const schema = await buildSchema({
     resolvers: [
