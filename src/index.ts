@@ -5,19 +5,17 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import { buildSchema } from "type-graphql";
 import { Container } from "typedi";
-import {
-  getConnectionOptions,
-  ConnectionOptions,
-  createConnection,
-  useContainer,
-} from "typeorm";
+import { ConnectionOptions, createConnection, useContainer } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
 import Account from "./entities/Account";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
-dotenv.config();
+
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const PORT = process.env.PORT;
 
@@ -59,22 +57,27 @@ const getUser = async (token: string): Promise<User | undefined> => {
 
 const getOptions = async () => {
   console.log(`getting DB options`);
-  let connectionOptions: ConnectionOptions;
-  connectionOptions = {
+  const connectionOptions: ConnectionOptions = {
     type: "postgres",
     synchronize: true,
     logging: false,
     namingStrategy: new SnakeNamingStrategy(),
-    entities: ["dist/entities/*{.ts,.js}"],
   };
-  if (process.env.DATABASE_URL) {
-    Object.assign(connectionOptions, { url: process.env.DATABASE_URL });
+  if (process.env.NODE_ENV === "production") {
+    Object.assign(connectionOptions, {
+      url: process.env.DATABASE_URL,
+      entities: ["dist/entities/*{.ts,.js}"],
+    });
   } else {
-    // gets your default configuration
-    // you could get a specific config by name getConnectionOptions('production')
-    // or getConnectionOptions(process.env.NODE_ENV)
-
-    connectionOptions = await getConnectionOptions();
+    Object.assign(connectionOptions, {
+      name: "default",
+      host: "localhost",
+      port: 5432,
+      username: "postgres",
+      password: "postgres",
+      database: "photos",
+      entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+    });
   }
 
   return connectionOptions;

@@ -2,7 +2,8 @@
 import "reflect-metadata";
 import _ from "lodash";
 import faker from "faker";
-import { createConnection, Repository } from "typeorm";
+import { ConnectionOptions, createConnection, Repository } from "typeorm";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import Location from "../entities/Location";
 import Photographer from "../entities/Photographer";
 import Photo from "../entities/Photo";
@@ -324,7 +325,37 @@ const addFinishesToPhotos = async (args: {
 };
 
 const seed = async () => {
-  const connection = await createConnection();
+  // const connection = await createConnection();
+  const getOptions = async () => {
+    console.log(`getting DB options`);
+    const connectionOptions: ConnectionOptions = {
+      type: "postgres",
+      synchronize: true,
+      logging: false,
+      namingStrategy: new SnakeNamingStrategy(),
+    };
+    if (process.env.NODE_ENV === "production") {
+      Object.assign(connectionOptions, {
+        url: process.env.DATABASE_URL,
+        entities: ["dist/entities/*{.ts,.js}"],
+      });
+    } else {
+      Object.assign(connectionOptions, {
+        name: "default",
+        host: "localhost",
+        port: 5432,
+        username: "postgres",
+        password: "postgres",
+        database: "photos",
+        entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+      });
+    }
+
+    return connectionOptions;
+  };
+
+  const typeormconfig = await getOptions();
+  const connection = await createConnection(typeormconfig);
 
   const photoRepository = await connection.getRepository(Photo);
   const photographerRepository = await connection.getRepository(Photographer);
@@ -341,7 +372,7 @@ const seed = async () => {
   const finishRepository = await connection.getRepository(Finish);
   const photoFinishRespository = await connection.getRepository(PhotoFinish);
 
-  const photosCount = 10;
+  const photosCount = 200;
   const photoArgs = { photosCount };
 
   // * Subjects
