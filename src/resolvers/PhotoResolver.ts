@@ -21,19 +21,10 @@ import PhotoCollection from "../entities/PhotoCollection";
 @InputType()
 class PhotoInput {
   @Field()
-  photoUrl: string;
+  title: string;
 
-  @Field({ nullable: true })
-  title?: string;
-
-  @Field({ nullable: true })
-  description?: string;
-
-  @Field(() => [String])
-  subjects: string[];
-
-  @Field(() => [String], { nullable: true })
-  tags: string[];
+  @Field()
+  description: string;
 
   @Field(() => Boolean, { nullable: true })
   isFeatured: boolean;
@@ -59,9 +50,6 @@ class PhotoInput {
 
 @InputType()
 class PhotoUpdateInput {
-  @Field({ nullable: true })
-  photoUrl?: string;
-
   @Field({ nullable: true })
   title?: string;
 
@@ -115,11 +103,15 @@ export default class PhotoResolver {
       relations: [
         "location",
         "photographer",
+        "images",
+        "subjectsInPhoto",
+        "subjectsInPhoto.subject",
+        "tagsForPhoto",
+        "tagsForPhoto.tag",
         "collectionsForPhoto",
         "collectionsForPhoto.collection",
       ],
     });
-    console.log(`photos: ${JSON.stringify(photos, null, 2)}`);
     return photos;
   }
 
@@ -130,13 +122,13 @@ export default class PhotoResolver {
       relations: [
         "location",
         "photographer",
-        "collectionsForPhoto",
-        "collectionsForPhoto.collection",
         "images",
-        "tagsForPhoto",
-        "tagsForPhoto.tag",
         "subjectsInPhoto",
         "subjectsInPhoto.subject",
+        "tagsForPhoto",
+        "tagsForPhoto.tag",
+        "collectionsForPhoto",
+        "collectionsForPhoto.collection",
       ],
     });
 
@@ -149,12 +141,16 @@ export default class PhotoResolver {
       relations: [
         "location",
         "photographer",
+        "images",
+        "subjectsInPhoto",
+        "subjectsInPhoto.subject",
+        "tagsForPhoto",
+        "tagsForPhoto.tag",
         "collectionsForPhoto",
         "collectionsForPhoto.collection",
       ],
     });
 
-    console.log(`photo: ${JSON.stringify(photo, null, 2)}`);
     return photo;
   }
 
@@ -164,56 +160,18 @@ export default class PhotoResolver {
   //     .createQueryBuilder("p")
   //     .leftJoinAndSelect("p.location", "l")
   //     .leftJoinAndSelect("p.photographer", "pg")
+  //     .leftJoinAndSelect("p.images", "i", "i.photo_id = p.id")
+  //     .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+  //     .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+  //     .leftJoinAndSelect("p.tagsForPhoto", "tp")
+  //     .leftJoinAndSelect("tp.tag", "t", "t.id = tp.tagId")
   //     .leftJoinAndSelect("p.collectionsForPhoto", "pc")
   //     .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
   //     .orderBy("p.id", "ASC")
   //     .getMany();
 
-  //   console.log(`GET SQL ${JSON.stringify(photos, null, 2)}`);
+  //   // console.log(`GET SQL ${JSON.stringify(photos, null, 2)}`);
   //   return photos;
-  // }
-
-  // @Query(() => Photo)
-  // async photo(@Arg("id", () => Int) id: number) {
-  //   const photo = await this.photoRepository
-  //     .createQueryBuilder("p")
-  //     .leftJoinAndSelect("p.location", "l")
-  //     .leftJoinAndSelect("p.photographer", "pg")
-  //     .leftJoinAndSelect("p.collectionsForPhoto", "pc")
-  //     .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
-  //     .where("p.id = :id", { id: id })
-  //     .orderBy("p.rating", "DESC")
-  //     .getOne();
-
-  //   console.log(`GET SQL ${JSON.stringify(photo, null, 2)}`);
-  //   return photo;
-  // }
-
-  // @FieldResolver(() => Location)
-  // async location(@Root() photo: Photo): Promise<Location> {
-  //   const location = (await this.locationRepository.findOne(
-  //     photo.locationId
-  //   )) as Location;
-  //   return location;
-  // }
-
-  // @FieldResolver(() => Photographer)
-  // async photographer(@Root() photo: Photo): Promise<Photographer> {
-  //   const photographer = (await this.photographerRepository.findOne(
-  //     photo.photographerId
-  //   )) as Photographer;
-  //   return photographer;
-  // }
-
-  // @FieldResolver(() => [Collection])
-  // async collectionsForPhoto(@Root() photo: Photo): Promise<Collection[]> {
-  //   const collections = await this.collectionRepository
-  //     .createQueryBuilder("c")
-  //     .leftJoin(PhotoCollection, "pc", "pc.collectionId = c.Id")
-  //     .where("pc.photoId = :pId", { pId: photo.id })
-  //     .getMany();
-
-  //   return collections;
   // }
 
   //* Mutations
@@ -294,35 +252,5 @@ export default class PhotoResolver {
       throw new Error(`Failed to delete photo.`);
     }
     return result;
-  }
-
-  @Authorized("ADMIN")
-  @Mutation(() => Boolean)
-  async addPhotoToCollection(
-    @Arg("photoId", () => Int) photoId: number,
-    @Arg("collectionId", () => Int) collectionId: number
-  ): Promise<boolean> {
-    const photoCollection = await this.photoCollectionRepository.create({
-      photoId: photoId,
-      collectionId: collectionId,
-    });
-    await this.photoCollectionRepository.save(photoCollection);
-    return true;
-  }
-
-  @Authorized("ADMIN")
-  @Mutation(() => Boolean)
-  async removePhotoFromCollection(
-    @Arg("photoId", () => Int) photoId: number,
-    @Arg("collectionId", () => Int) collectionId: number
-  ): Promise<boolean> {
-    const deleteResult = await this.photoCollectionRepository.delete({
-      photoId: photoId,
-      collectionId: collectionId,
-    });
-    if (deleteResult && deleteResult.affected != 0) {
-      return true;
-    }
-    return false;
   }
 }

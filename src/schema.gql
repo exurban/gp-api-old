@@ -148,7 +148,7 @@ type Photo {
   sku: Int!
   title: String!
   description: String!
-  discontinued: Boolean!
+  isDiscontinued: Boolean!
   isFeatured: Boolean!
   isLimitedEdition: Boolean!
   rating: Int!
@@ -238,6 +238,16 @@ input LocationUpdateInput {
   tag: String
 }
 
+input PhotoCollectionInput {
+  photoId: Int!
+  collectionId: Int!
+}
+
+input PhotoFinishInput {
+  photoId: Int!
+  finishId: Int!
+}
+
 input PhotographerInput {
   firstName: String!
   lastName: String!
@@ -255,11 +265,8 @@ input PhotographerUpdateInput {
 }
 
 input PhotoInput {
-  photoUrl: String!
-  title: String
-  description: String
-  subjects: [String!]!
-  tags: [String!]
+  title: String!
+  description: String!
   isFeatured: Boolean
   isLimitedEdition: Boolean
   rating: Int
@@ -270,7 +277,6 @@ input PhotoInput {
 }
 
 input PhotoUpdateInput {
-  photoUrl: String
   title: String
   description: String
   subjects: [String!]
@@ -302,30 +308,36 @@ input TagUpdateInput {
 }
 
 input GetApiTokenInput {
+  userId: Float!
   email: String!
-  providerId: String!
-  providerAccountId: String!
 }
 
 type Query {
   collections: [Collection!]!
+  collectionsWithPhotos: [Collection!]!
   collection(id: Int!): Collection!
+  collectionWithPhotos(id: Int!): Collection!
   finishes: [Finish!]!
+  finishesWithPhotos: [Finish!]!
   finish(id: Int!): Finish
+  finishWithPhotos(id: Int!): Finish
   locations: [Location!]!
   location(id: Int!): Location
+  photosTakenAtLocation(id: Int!): Location
   photographers: [Photographer!]!
   photographer(id: Int!): Photographer
   photos: [Photo!]!
   featuredPhotos: [Photo!]!
   photo(id: Int!): Photo!
   subjects: [Subject!]!
-  photosOfSubject(input: SubjectInput!): Subject!
+  subject(id: Int!): Subject!
+  subjectWithName(input: SubjectInput!): Subject!
   tags: [Tag!]!
   photosWithTag(input: TagInput!): Tag!
   users: [User!]!
+  user(id: Int!): User!
   userSummaries: [User!]!
-  user(id: Int!): [User!]!
+  getUserFavorites: [UserFavorite!]!
   newsletterSubscribers: [User!]!
 }
 
@@ -339,14 +351,16 @@ type Mutation {
   addLocation(input: LocationInput!): Location!
   updateLocation(input: LocationUpdateInput!, id: Int!): Location
   deleteLocation(id: Int!): Boolean!
+  addPhotoToCollection(input: PhotoCollectionInput!): Boolean!
+  removePhotoFromCollection(input: PhotoCollectionInput!): Boolean!
+  addFinishToPhoto(input: PhotoFinishInput!): Boolean!
+  removeFinishFromPhoto(input: PhotoFinishInput!): Boolean!
   addPhotographer(input: PhotographerInput!): Photographer!
   updatePhotographer(input: PhotographerUpdateInput!, id: Int!): Photographer
   deletePhotographer(id: Int!): Boolean!
   addPhoto(input: PhotoInput!): Photo!
   updatePhoto(input: PhotoUpdateInput!, id: Int!): Photo!
   deletePhoto(id: Int!): Boolean!
-  addPhotoToCollection(collectionId: Int!, photoId: Int!): Boolean!
-  removePhotoFromCollection(collectionId: Int!, photoId: Int!): Boolean!
   addSubject(input: SubjectInput!): Subject!
   updateSubject(input: SubjectUpdateInput!, id: Int!): Subject!
   deleteSubject(id: Int!): Boolean!
@@ -360,5 +374,5 @@ type Mutation {
   removePhotoFromFavorites(photoId: Float!): Boolean!
   toggleUserFavorite(photoId: Float!): Boolean!
   addPhotoToShoppingBag(photoId: Float!): Boolean!
-  removePhotoFromShoppingBsg(photoId: Float!): Boolean!
+  removePhotoFromShoppingBag(photoId: Float!): Boolean!
 }

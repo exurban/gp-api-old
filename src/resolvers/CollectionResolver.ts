@@ -46,54 +46,56 @@ export default class CollectionResolver {
   ) {}
 
   //* Queries
-  // @Query(() => [Collection])
-  // async collections(): Promise<Collection[]> {
-  //   const collections = await this.collectionRepository
-  //     .createQueryBuilder("c")
-  //     .leftJoinAndSelect("c.photosInCollection", "pc")
-  //     .leftJoinAndSelect("pc.photo", "p", "p.id = pc.photoId")
-  //     .leftJoinAndSelect("p.photographer", "pg")
-  //     .leftJoinAndSelect("p.location", "l")
-  //     .getMany();
-
-  //   console.log(`collections: ${JSON.stringify(collections, null, 2)}`);
-  //   return collections;
-  // }
-
-  // @Query(() => [Collection])
-  // async collections(): Promise<Collection[]> {
-  //   const collections = await this.collectionRepository
-  //     .createQueryBuilder("c")
-  //     // .leftJoinAndSelect("c.photosInCollection", "pc")
-  //     .leftJoinAndSelect("c.photosInCollection", "pc", "c.id = pc.collectionId")
-  //     .leftJoinAndSelect("pc.photo", "p", "p.id = pc.photoId")
-  //     // .leftJoinAndSelect("p.photographer", "pg")
-  //     // .leftJoinAndSelect("p.location", "l")
-  //     .getMany();
-
-  //   console.log(`collections ${JSON.stringify(collections, null, 2)}`);
-
-  //   return collections;
-  // }
-
   @Query(() => [Collection])
   async collections(): Promise<Collection[]> {
-    const collections = await Collection.find({
-      relations: ["photosInCollection", "photosInCollection.photo"],
+    return await Collection.find();
+  }
+
+  @Query(() => [Collection])
+  async collectionsWithPhotos(): Promise<Collection[]> {
+    return await Collection.find({
+      relations: [
+        "photosInCollection",
+        "photosInCollection.photo",
+        "photosInCollection.photo.location",
+        "photosInCollection.photo.photographer",
+        "photosInCollection.photo.images",
+        "photosInCollection.photo.subjectsInPhoto",
+        "photosInCollection.photo.subjectsInPhoto.subject",
+        "photosInCollection.photo.tagsForPhoto",
+        "photosInCollection.photo.tagsForPhoto.tag",
+        "photosInCollection.photo.collectionsForPhoto",
+        "photosInCollection.photo.collectionsForPhoto.collection",
+      ],
     });
-    console.log(`collections: ${JSON.stringify(collections, null, 2)}`);
-    return collections;
   }
 
   @Query(() => Collection)
   async collection(
     @Arg("id", () => Int) id: number
   ): Promise<Collection | undefined> {
-    const coll = await Collection.findOne(id, {
-      relations: ["photosInCollection", "photosInCollection.photo"],
+    return await Collection.findOne(id);
+  }
+
+  @Query(() => Collection)
+  async collectionWithPhotos(
+    @Arg("id", () => Int) id: number
+  ): Promise<Collection | undefined> {
+    return await Collection.findOne(id, {
+      relations: [
+        "photosInCollection",
+        "photosInCollection.photo",
+        "photosInCollection.photo.location",
+        "photosInCollection.photo.photographer",
+        "photosInCollection.photo.images",
+        "photosInCollection.photo.subjectsInPhoto",
+        "photosInCollection.photo.subjectsInPhoto.subject",
+        "photosInCollection.photo.tagsForPhoto",
+        "photosInCollection.photo.tagsForPhoto.tag",
+        "photosInCollection.photo.collectionsForPhoto",
+        "photosInCollection.photo.collectionsForPhoto.collection",
+      ],
     });
-    console.log(`collection: ${JSON.stringify(coll, null, 2)}`);
-    return coll;
   }
 
   //* Mutations
@@ -123,6 +125,7 @@ export default class CollectionResolver {
     return updatedCollection;
   }
 
+  // ! TO DO: check for photos in collection. if so, require that they be removed from collection before it can be deleted
   @Authorized("ADMIN")
   @Mutation(() => Boolean)
   async deleteCollection(@Arg("id", () => Int) id: number): Promise<boolean> {

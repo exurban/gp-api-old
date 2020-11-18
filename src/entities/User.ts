@@ -46,6 +46,11 @@ export default class User extends BaseEntity {
   @Column({ type: "boolean", default: false })
   isSubscribed: boolean;
 
+  // Ben Awad: https://github.com/benawad/type-graphql-series/blob/master/src/entity/Author.ts
+  // * Doesn't expose the field
+  // @OneToMany(() => AuthorBook, (ab) => ab.author)
+  // bookConnection: Promise<AuthorBook[]>;
+
   @Field(() => [UserFavorite])
   @OneToMany(() => UserFavorite, (fav) => fav.user)
   userFavorites: Promise<UserFavorite[]>;

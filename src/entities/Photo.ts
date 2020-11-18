@@ -54,7 +54,7 @@ export default class Photo extends BaseEntity {
 
   @Field()
   @Column("boolean", { default: false })
-  discontinued: boolean;
+  isDiscontinued: boolean;
 
   @Field()
   @Column("boolean", { default: false })
@@ -134,15 +134,3 @@ export default class Photo extends BaseEntity {
     this.sku = this.skuGenerator + 1000;
   }
 }
-
-//! Sunday's to dos
-/** collection
- * finish
- * dimensions
- * finishDimensions
- * user
- *  - subscribe / unsubscribe
- *  - favorites
- *  - shoppingBag
- * integrate with Next-Auth
- */

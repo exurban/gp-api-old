@@ -32,7 +32,13 @@ export default class SubjectResolver {
   @Query(() => [Tag])
   async tags(): Promise<Tag[]> {
     return await this.tagRepository.find({
-      relations: ["photosWithTag", "photosWithTag.photo"],
+      relations: [
+        "photosWithTag",
+        "photosWithTag.photo",
+        "photosWithTag.photo.photographer",
+        "photosWithTag.photo.location",
+        "photosWithTag.photo.images",
+      ],
     });
   }
 
@@ -40,9 +46,21 @@ export default class SubjectResolver {
   async photosWithTag(
     @Arg("input", () => TagInput) input: TagInput
   ): Promise<Tag | undefined> {
-    return await Tag.findOne({
+    return await this.tagRepository.findOne({
       where: { name: input.name },
-      relations: ["photosWithTag", "photosWithTag.photo"],
+      relations: [
+        "photosWithTag",
+        "photosWithTag.photo",
+        "photosWithTag.photo.photographer",
+        "photosWithTag.photo.location",
+        "photosWithTag.photo.images",
+        "photosWithTag.photo.subjectsInPhoto",
+        "photosWithTag.photo.subjectsInPhoto.subject",
+        "photosWithTag.photo.tagsForPhoto",
+        "photosWithTag.photo.tagsForPhoto.tag",
+        "photosWithTag.photo.collectionsForPhoto",
+        "photosWithTag.photo.collectionsForPhoto.collection",
+      ],
     });
   }
 

@@ -16,7 +16,6 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import User from "../entities/User";
-import Account from "../entities/Account";
 import UserFavorite from "../entities/UserFavorite";
 import UserShoppingBagItem from "../entities/UserShoppingBagItem";
 
@@ -27,13 +26,10 @@ interface Context {
 @InputType()
 class GetApiTokenInput {
   @Field()
+  userId: number;
+
+  @Field()
   email: string;
-
-  @Field()
-  providerId: string;
-
-  @Field()
-  providerAccountId: string;
 }
 
 /** ? Mutations
@@ -81,6 +77,14 @@ export default class UserResolver {
     });
   }
 
+  @Authorized("ADMIN")
+  @Query(() => User)
+  async user(@Arg("id", () => Int) id: number): Promise<User | undefined> {
+    return await this.userRepository.findOne(id, {
+      relations: ["userFavorites.count", "userShoppingBagItems.count"],
+    });
+  }
+
   @Query(() => [User])
   async userSummaries(): Promise<[User[], number]> {
     return await this.userRepository.findAndCount({
@@ -88,11 +92,26 @@ export default class UserResolver {
     });
   }
 
-  @Authorized("ADMIN")
-  @Query(() => [User])
-  async user(@Arg("id", () => Int) id: number): Promise<User | undefined> {
-    return await this.userRepository.findOne(id, {
-      relations: ["userFavorites.count", "userShoppingBagItems.count"],
+  @Authorized("USER")
+  @Query(() => [UserFavorite])
+  async getUserFavorites(
+    @Ctx() context: Context
+  ): Promise<UserFavorite[] | undefined> {
+    const userId = context.user.id;
+    return await this.userFavoriteRepository.find({
+      where: { userId: userId },
+      relations: [
+        "photo",
+        "photo.location",
+        "photo.photographer",
+        "photo.images",
+        "photo.tagsForPhoto",
+        "photo.tagsForPhoto.tag",
+        "photo.subjectsInPhoto",
+        "photo.subjectsInPhoto.subject",
+        "photo.collectionsForPhoto",
+        "photo.collectionsForPhoto.collection",
+      ],
     });
   }
 
@@ -108,40 +127,22 @@ export default class UserResolver {
   ): Promise<string> {
     console.log(`received Get API Token request`);
     // look up compoundId, get its user and check that the email uses the one sent
-    const account = await Account.findOne({
-      where: {
-        providerId: input.providerId,
-        providerAccountId: input.providerAccountId,
-      },
-    });
+    const user = await this.userRepository.findOne(input.userId);
 
-    // * handle user already exists / not first signin
-    if (account) {
-      const user = await User.findOne({ id: account.userId });
+    // * verify email
+    if (user && user.email === input.email) {
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+        },
+        process.env.JWT_SECRET as string
+      );
 
-      // * verify email
-      if (user && user.email === input.email) {
-        const token = jwt.sign(
-          { userId: account.userId },
-          process.env.JWT_SECRET as string
-        );
-
-        console.log(`Sending token to user already in DB.`);
-        return token;
-      } else {
-        throw new Error(`Sign in credentials don't match.`);
-      }
-    } else {
-      //* initial signin, issue token with account + email to resolve later
-      const payload = {
-        email: input.email,
-        providerId: input.providerId,
-        providerAccountId: input.providerAccountId,
-      };
-      const token = await jwt.sign(payload, process.env.JWT_SECRET as string);
-
-      console.log(`Sending temporary JWT token to new user.`);
+      console.log(`Sending token to user already in DB.`);
       return token;
+    } else {
+      throw new Error(`Sign in credentials don't match.`);
     }
   }
 
@@ -290,7 +291,7 @@ export default class UserResolver {
 
   @Authorized("USER")
   @Mutation(() => Boolean)
-  async removePhotoFromShoppingBsg(
+  async removePhotoFromShoppingBag(
     @Ctx() context: Context,
     @Arg("photoId") photoId: number
   ): Promise<boolean> {

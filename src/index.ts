@@ -99,12 +99,7 @@ const main = async () => {
   // await createConnection();
 
   const schema = await buildSchema({
-    resolvers: [
-      // __dirname + "/entities/*.{ts,js}",
-      __dirname + "/resolvers/*.{ts,js}",
-      // `${__dirname}/entities/**/*.{ts,js}`,
-      // `${__dirname}/resolvers/**/*.{ts,js}`,
-    ],
+    resolvers: [__dirname + "/resolvers/*.{ts,js}"],
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       commentDescriptions: true,
@@ -119,6 +114,13 @@ const main = async () => {
     introspection: true,
     playground: true,
     context: async ({ req }) => {
+      console.log(
+        `received req with credentials: ${JSON.stringify(
+          req.rawHeaders[5],
+          null,
+          2
+        )}`
+      );
       let user;
       if (
         req.headers.authorization &&
@@ -136,17 +138,21 @@ const main = async () => {
 
   const app = Express();
 
-  app.use(
-    cors({
-      credentials: true,
-      origin: "https://gp-app.vercel.app",
-    })
-  );
+  const corsOptions = {
+    origin: "http://localhost:3000",
+    credentials: true,
+  };
+
+  app.use(cors(corsOptions));
 
   apolloServer.applyMiddleware({ path: "/", app });
 
+  // Ben Awad used cors: false in the video below. Not sure if I need it.
+  // https://www.youtube.com/watch?v=izriJQeqGUA&list=PLN3n1USn4xlkDk8vPVtgyGG3_1eXYPrW-&index=3
+  // apolloServer.applyMiddleware({ path: "/", app, cors: false });
+
   app.listen(PORT, () => {
-    console.log(`Server stated on localhost ${PORT}/api`);
+    console.log(`Server stated on localhost:${PORT}/api`);
   });
 };
 

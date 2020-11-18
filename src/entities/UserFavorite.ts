@@ -24,7 +24,7 @@ export default class UserFavorite extends BaseEntity {
   userId: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.userFavorites)
+  @ManyToOne(() => User, (user) => user.userFavorites, { primary: true })
   @JoinColumn({ name: "user_id" })
   user: Promise<User>;
 
@@ -36,7 +36,7 @@ export default class UserFavorite extends BaseEntity {
   photoId: number;
 
   @Field(() => Photo)
-  @ManyToOne(() => Photo, (photo) => photo.favoritedByUsers)
+  @ManyToOne(() => Photo, (photo) => photo.favoritedByUsers, { primary: true })
   @JoinColumn({ name: "photo_id" })
   photo: Promise<Photo>;
 }

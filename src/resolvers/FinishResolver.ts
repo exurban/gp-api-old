@@ -98,13 +98,51 @@ export default class FinishResolver {
 
   //* Queries
   @Query(() => [Finish])
-  finishes(): Promise<Finish[]> {
-    return this.finishRepository.find();
+  async finishes(): Promise<Finish[]> {
+    return await this.finishRepository.find();
+  }
+
+  @Query(() => [Finish])
+  async finishesWithPhotos(): Promise<Finish[]> {
+    return await this.finishRepository.find({
+      relations: [
+        "photosWithFinish",
+        "photosWithFinish.photo",
+        "photosWithFinish.photo.location",
+        "photosWithFinish.photo.photographer",
+        "photosWithFinish.photo.images",
+        "photosWithFinish.photo.subjectsInPhoto",
+        "photosWithFinish.photo.subjectsInPhoto.subject",
+        "photosWithFinish.photo.tagsForPhoto",
+        "photosWithFinish.photo.tagsForPhoto.tag",
+        "photosWithFinish.photo.collectionsForPhoto",
+        "photosWithFinish.photo.collectionsForPhoto.collection",
+      ],
+    });
   }
 
   @Query(() => Finish, { nullable: true })
   async finish(@Arg("id", () => Int) id: number) {
-    return this.finishRepository.findOne(id);
+    return await this.finishRepository.findOne(id);
+  }
+
+  @Query(() => Finish, { nullable: true })
+  async finishWithPhotos(@Arg("id", () => Int) id: number) {
+    return await this.finishRepository.findOne(id, {
+      relations: [
+        "photosWithFinish",
+        "photosWithFinish.photo",
+        "photosWithFinish.photo.location",
+        "photosWithFinish.photo.photographer",
+        "photosWithFinish.photo.images",
+        "photosWithFinish.photo.subjectsInPhoto",
+        "photosWithFinish.photo.subjectsInPhoto.subject",
+        "photosWithFinish.photo.tagsForPhoto",
+        "photosWithFinish.photo.tagsForPhoto.tag",
+        "photosWithFinish.photo.collectionsForPhoto",
+        "photosWithFinish.photo.collectionsForPhoto.collection",
+      ],
+    });
   }
 
   //* Field Resolvers

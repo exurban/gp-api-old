@@ -65,6 +65,24 @@ export default class LocationResolver {
     });
   }
 
+  @Query(() => Location, { nullable: true })
+  async photosTakenAtLocation(@Arg("id", () => Int) id: number) {
+    return this.locationRepository.findOne(id, {
+      relations: [
+        "photos",
+        "photos.photographer",
+        "photos.location",
+        "photos.images",
+        "photos.subjectsInPhoto",
+        "photos.subjectsInPhoto.subject",
+        "photos.tagsForPhoto",
+        "photos.tagsForPhoto.tag",
+        "photos.collectionsForPhoto",
+        "photos.collectionsForPhoto.collection",
+      ],
+    });
+  }
+
   //* Mutations
   @Authorized("ADMIN")
   @Mutation(() => Location)

@@ -34,16 +34,6 @@ export default class SubjectResolver {
   @Query(() => [Subject])
   async subjects(): Promise<Subject[]> {
     return await this.subjectRepository.find({
-      relations: ["photosOfSubject", "photosOfSubject.photo"],
-    });
-  }
-
-  @Query(() => Subject)
-  async photosOfSubject(
-    @Arg("input", () => SubjectInput) input: SubjectInput
-  ): Promise<Subject | undefined> {
-    return await Subject.findOne({
-      where: { name: input.name },
       relations: [
         "photosOfSubject",
         "photosOfSubject.photo",
@@ -52,6 +42,45 @@ export default class SubjectResolver {
         "photosOfSubject.photo.tagsForPhoto.tag",
         "photosOfSubject.photo.photographer",
         "photosOfSubject.photo.location",
+      ],
+    });
+  }
+
+  @Query(() => Subject)
+  async subject(
+    @Arg("id", () => Int) id: number
+  ): Promise<Subject | undefined> {
+    return await Subject.findOne(id, {
+      relations: [
+        "photosOfSubject",
+        "photosOfSubject.photo",
+        "photosOfSubject.photo.images",
+        "photosOfSubject.photo.tagsForPhoto",
+        "photosOfSubject.photo.tagsForPhoto.tag",
+        "photosOfSubject.photo.photographer",
+        "photosOfSubject.photo.location",
+      ],
+    });
+  }
+
+  @Query(() => Subject)
+  async subjectWithName(
+    @Arg("input", () => SubjectInput) input: SubjectInput
+  ): Promise<Subject | undefined> {
+    return await Subject.findOne({
+      where: { name: input.name },
+      relations: [
+        "photosOfSubject",
+        "photosOfSubject.photo",
+        "photosOfSubject.photo.location",
+        "photosOfSubject.photo.photographer",
+        "photosOfSubject.photo.images",
+        "photosOfSubject.photo.subjectsInPhoto",
+        "photosOfSubject.photo.subjectsInPhoto.subject",
+        "photosOfSubject.photo.tagsForPhoto",
+        "photosOfSubject.photo.tagsForPhoto.tag",
+        "photosOfSubject.photo.collectionsForPhoto",
+        "photosOfSubject.photo.collectionsForPhoto.collection",
       ],
     });
   }
