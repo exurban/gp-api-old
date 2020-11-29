@@ -47,10 +47,10 @@ export default class Image extends BaseEntity {
   @Column("int")
   height: number;
 
-  @Field(() => Photo)
-  @ManyToOne(() => Photo, (p) => p.images)
+  @Field(() => Photo, { nullable: true })
+  @ManyToOne(() => Photo, (p) => p.images, { nullable: true })
   @JoinColumn()
-  photo: Photo;
+  photo?: Photo;
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

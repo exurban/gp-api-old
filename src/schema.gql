@@ -3,11 +3,16 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
-type Location {
+type Image {
   id: ID!
-  name: String!
-  tag: String!
-  photos: [Photo!]!
+  imageUrl: String!
+  altText: String!
+  fileType: String!
+  fileExtension: String!
+  size: String!
+  width: Int!
+  height: Int!
+  photo: Photo
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -15,11 +20,34 @@ type Location {
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
 scalar DateTime
 
+type Location {
+  # The ID of the location. It is unique, numeric and automatically-generated.
+  id: ID!
+
+  # The name of the Location. It is required and must be unique.
+  name: String!
+
+  # A tag for the Location. It is required and must be unique.
+  tag: String!
+
+  # Optional. A description of the location, used as a vignette at the top of the Location's photos page.
+  description: String
+
+  # Optional. A map of the location used in conenction with the vignette at the top of the Location's photos page.
+  coverImage: Image
+
+  # Nullable. An array of photos taken at the Location.
+  photos: [Photo!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type Collection {
   id: ID!
   name: String!
   tag: String!
   description: String!
+  coverImage: Image
   photosInCollection: [PhotoCollection!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -30,20 +58,6 @@ type PhotoCollection {
   collection: Collection!
   photoId: Photo!
   photo: Photo!
-}
-
-type Image {
-  id: ID!
-  imageUrl: String!
-  altText: String!
-  fileType: String!
-  fileExtension: String!
-  size: String!
-  width: Int!
-  height: Int!
-  photo: Photo!
-  createdAt: DateTime!
-  updatedAt: DateTime!
 }
 
 type Photographer {
@@ -61,8 +75,8 @@ type Photographer {
   # The artist's email address.
   email: String!
 
-  # The URL for the artist's portrait.
-  photoUrl: String!
+  # The Image for the artist's portrait.
+  coverImage: Image
 
   # The artist's biography.
   bio: String!
@@ -80,6 +94,10 @@ type Photographer {
 type Subject {
   id: ID!
   name: String!
+  description: String
+
+  # Optional. An image of the subject used in connection with the vignette at the top of the Subject's photos page.
+  coverImage: Image
   photosOfSubject: [PhotoSubject!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -94,7 +112,17 @@ type PhotoSubject {
 
 type Tag {
   id: ID!
+
+  # The name of the tag.
   name: String!
+
+  # Optional. A description of the tag used in connection with the vignette at the top of the Tag's photo page.
+  description: String
+
+  # Optional. An image of the tag used in connection with the vignette at the top of the Tag's photos page.
+  coverImage: Image
+
+  # A connection through a join table to the photos tagged with the tag.
   photosWithTag: [PhotoTag!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -146,23 +174,24 @@ type Photo {
   id: ID!
   skuGenerator: Int!
   sku: Int!
+  sortIndex: Int!
   title: String!
   description: String!
-  isDiscontinued: Boolean!
   isFeatured: Boolean!
   isLimitedEdition: Boolean!
+  isDiscontinued: Boolean!
   rating: Int!
   basePrice: Float
   priceModifier: Float
-  photographer: Photographer!
-  location: Location!
-  images: [Image!]!
-  subjectsInPhoto: [PhotoSubject!]!
-  tagsForPhoto: [PhotoTag!]!
-  collectionsForPhoto: [PhotoCollection!]!
-  finishesForPhoto: [PhotoFinish!]!
-  favoritedByUsers: [UserFavorite!]!
-  inShoppingBagsOfUsers: [UserShoppingBagItem!]!
+  photographer: Photographer
+  location: Location
+  images: [Image!]
+  subjectsInPhoto: [PhotoSubject!]
+  tagsForPhoto: [PhotoTag!]
+  collectionsForPhoto: [PhotoCollection!]
+  finishesForPhoto: [PhotoFinish!]
+  favoritedByUsers: [UserFavorite!]
+  inShoppingBagsOfUsers: [UserShoppingBagItem!]
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -186,6 +215,45 @@ type User {
   userShoppingBagItems: [UserShoppingBagItem!]!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+type PaginatedPhotosAtLocationResponse {
+  items: [Photo!]!
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
+  locationInfo: Location!
+}
+
+type PaginatedPhotosByPhotographerResponse {
+  items: [Photo!]!
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
+  photographerInfo: Photographer!
+}
+
+type PaginatedPhotoResponse {
+  items: [Photo!]!
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
+}
+
+type PaginatedPhotosOfSubjectResponse {
+  items: [Photo!]!
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
+  subjectInfo: Subject!
+}
+
+type PaginatedPhotosOfTagResponse {
+  items: [Photo!]!
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
+  tagInfo: Tag!
 }
 
 input CollectionInput {
@@ -228,14 +296,65 @@ input FinishUpdateInput {
   priceModifier: Float
 }
 
+input ImageInput {
+  imageUrl: String!
+  altText: String!
+  fileType: String!
+  fileExtension: String!
+  size: String!
+  width: Int!
+  height: Int!
+  photoId: Float
+}
+
+input ImageUpdateInput {
+  imageUrl: String
+  altText: String
+  fileType: String
+  fileExtension: String
+  size: String
+  width: Int
+  height: Int
+  photoId: Float
+}
+
+# Inputs to create a new Location entity.
 input LocationInput {
   name: String!
   tag: String!
+
+  # Vignette describing the location.
+  description: String
+
+  # Map of the location. Used at the top of the Location's Photo Gallery. Used to look up the Map and add it to the One-to-One relationship.
+  coverImageId: Float
 }
 
+# Optional inputs to be used to update the Location's metadata.
 input LocationUpdateInput {
+  # Optional. Name of the Location.
   name: String
+
+  # Optional. Tag used to identify the Location.
   tag: String
+
+  # Vignette describing the location.
+  description: String
+
+  # Map of the location. Used at the top of the Location's Photo Gallery. Used to look up the Map and add it to the One-to-One relationship.
+  coverImageId: Float
+}
+
+# Input to retrieve Location and Location's Photos.
+input LocationNamedInput {
+  name: String!
+}
+
+input AllPhotosAtLocationInput {
+  name: String
+  id: Float
+  first: Int
+  take: Int!
 }
 
 input PhotoCollectionInput {
@@ -248,20 +367,52 @@ input PhotoFinishInput {
   finishId: Int!
 }
 
+# Inputs to create a new Photographer entity.
 input PhotographerInput {
+  # Photographer's first name.
   firstName: String!
+
+  # Photographer's last name.
   lastName: String!
+
+  # Photographer's email address.
   email: String!
+
+  # Short biography for Photographer. Displayed at the top of the Photographer's photo gallery.
   bio: String!
-  photoUrl: String!
+
+  # ID of the image for the Photographer's portrait.
+  coverImageId: Float
 }
 
+# Inputs to update a Photographer entity.
 input PhotographerUpdateInput {
+  # Optional: Photographer's first name.
   firstName: String
+
+  # Optional: Photographer's last name.
   lastName: String
+
+  # Optional: Photographer's email address.
   email: String
+
+  # Optional: Short biography for Photographer. Displayed at the top of the Photographer's photo gallery.
   bio: String
-  photoUrl: String
+
+  # Inputs to update a Photographer entity.
+  coverImageId: Float
+}
+
+# Input to retrieve Photographer and Photographer's Photos.
+input PhotographerNamedInput {
+  name: String!
+}
+
+input AllPhotosByPhotographerInput {
+  firstName: String
+  id: Float
+  first: Int
+  take: Int!
 }
 
 input PhotoInput {
@@ -272,8 +423,9 @@ input PhotoInput {
   rating: Int
   basePrice: Float!
   priceModifier: Float
-  photographerId: Float!
-  locationId: Float!
+  photographerId: Int
+  locationId: Int
+  imageId: Int
 }
 
 input PhotoUpdateInput {
@@ -281,7 +433,7 @@ input PhotoUpdateInput {
   description: String
   subjects: [String!]
   tags: [String!]
-  discontinued: Boolean
+  isDiscontinued: Boolean
   isFeatured: Boolean
   isLimitedEdition: Boolean
   rating: Int
@@ -291,20 +443,50 @@ input PhotoUpdateInput {
   locationId: Float
 }
 
+input AllPhotosInput {
+  first: Int
+  take: Int!
+}
+
+input AllFeaturedPhotosInput {
+  first: Int
+  take: Int!
+}
+
 input SubjectInput {
   name: String!
+  description: String
+  coverImageId: Float
 }
 
 input SubjectUpdateInput {
   name: String
+  description: String
+  coverImageId: Float
+}
+
+input AllPhotosOfSubjectInput {
+  subject: String!
+  first: Int
+  take: Int!
 }
 
 input TagInput {
-  name: String!
+  name: String
+  description: String
+  coverImageId: Float
 }
 
 input TagUpdateInput {
   name: String
+  description: String
+  coverImageId: Float
+}
+
+input AllPhotosWithTagInput {
+  tag: String!
+  first: Int
+  take: Int!
 }
 
 input GetApiTokenInput {
@@ -321,24 +503,49 @@ type Query {
   finishesWithPhotos: [Finish!]!
   finish(id: Int!): Finish
   finishWithPhotos(id: Int!): Finish
+  images: [Image!]!
+  image(id: Int!): Image!
+  allPhotosAtLocation(input: AllPhotosAtLocationInput!): PaginatedPhotosAtLocationResponse!
+
+  # Returns all Locations + maps, only. Meant to be used on the backend.
   locations: [Location!]!
+
+  # Returns one Location + portrait, only or null, if no matching id is found. Meant to be used on the backend.
   location(id: Int!): Location
-  photosTakenAtLocation(id: Int!): Location
+
+  # Returns one Location + portrait AND Location's Photos and related data, or undefined if no Location matching name provided is found. Meant to be used on the frontend. Used for the Location's Gallery.
+  locationNamed(input: LocationNamedInput!): Location
+  allPhotosByPhotographer(input: AllPhotosByPhotographerInput!): PaginatedPhotosByPhotographerResponse!
+
+  # Returns all Photographers + portraits, only. Meant to be used on the backend.
   photographers: [Photographer!]!
+
+  # Returns one Photographer + portrait, only or null, if no matching id is found. Meant to be used on the backend.
   photographer(id: Int!): Photographer
+
+  # Returns one Photographer + portrait AND Photographer's Photos and related data. Meant to be used on the frontend. Used for the Photographer's Gallery.
+  photographerNamed(input: PhotographerNamedInput!): Photographer
   photos: [Photo!]!
-  featuredPhotos: [Photo!]!
-  photo(id: Int!): Photo!
+  allPhotos(input: AllPhotosInput!): PaginatedPhotoResponse!
+  allFeaturedPhotos(input: AllFeaturedPhotosInput!): PaginatedPhotoResponse!
+  photo(id: Int!): Photo
+  allPhotosOfSubject(input: AllPhotosOfSubjectInput!): PaginatedPhotosOfSubjectResponse!
   subjects: [Subject!]!
   subject(id: Int!): Subject!
-  subjectWithName(input: SubjectInput!): Subject!
+  subjectWithName(input: SubjectInput!): Subject
+  allPhotosWithTag(input: AllPhotosWithTagInput!): PaginatedPhotosOfTagResponse!
   tags: [Tag!]!
   photosWithTag(input: TagInput!): Tag!
   users: [User!]!
   user(id: Int!): User!
   userSummaries: [User!]!
-  getUserFavorites: [UserFavorite!]!
   newsletterSubscribers: [User!]!
+
+  # Returns all Photos favorited by the signed in User.
+  favorites: [Photo!]
+
+  # Returns all Photos in the shopping bag of the signed in User.
+  shoppingBagItems: [Photo!]
 }
 
 type Mutation {
@@ -348,6 +555,10 @@ type Mutation {
   addFinish(input: FinishInput!): Finish!
   updateFinish(input: FinishUpdateInput!, id: Int!): Finish
   deleteFinish(id: Int!): Boolean!
+  addImage(input: ImageInput!): Image!
+  updateImage(input: ImageUpdateInput!, id: Int!): Image!
+  deleteImage(id: Int!): Boolean!
+  addImageToPhoto(imageId: Int!, photoId: Int!): Image!
   addLocation(input: LocationInput!): Location!
   updateLocation(input: LocationUpdateInput!, id: Int!): Location
   deleteLocation(id: Int!): Boolean!

@@ -9,7 +9,7 @@ import { ConnectionOptions, createConnection, useContainer } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
-import Account from "./entities/Account";
+// import Account from "./entities/Account";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
 
@@ -20,11 +20,9 @@ if (process.env.NODE_ENV !== "production") {
 const PORT = process.env.PORT;
 
 interface ITokenPayload {
-  userId?: number;
-  iat?: number;
-  email?: string;
-  providerId?: string;
-  providerAccountId?: string;
+  id: number;
+  email: string;
+  iat: number;
 }
 
 // get the user info from a JWT token
@@ -34,25 +32,13 @@ const getUser = async (token: string): Promise<User | undefined> => {
     token,
     process.env.JWT_SECRET as jwt.Secret
   ) as ITokenPayload;
-  if (decodedToken.userId) {
-    return await User.findOne({ id: decodedToken.userId });
+  if (decodedToken.id) {
+    return await User.findOne({ id: decodedToken.id });
   } else {
     // user has a temp token after first signin. Let's replace it with a regular userId token
     console.error(`REQUEST HAS TEMPORARY JWT TOKEN.`);
-    const account = await Account.findOne({
-      where: {
-        providerId: decodedToken.providerId,
-        providerAccountId: decodedToken.providerAccountId,
-      },
-    });
-
-    if (account) {
-      const user = await User.findOne({ id: account.userId });
-      return user;
-    } else {
-      throw new Error(`Can't find user in database.`);
-    }
   }
+  return undefined;
 };
 
 const getOptions = async () => {
@@ -114,22 +100,18 @@ const main = async () => {
     introspection: true,
     playground: true,
     context: async ({ req }) => {
-      console.log(
-        `received req with credentials: ${JSON.stringify(
-          req.rawHeaders[5],
-          null,
-          2
-        )}`
-      );
       let user;
+      console.log(`rec'd req with body: ${JSON.stringify(req.body, null, 2)}`);
       if (
         req.headers.authorization &&
         req.headers.authorization.split(" ")[0] === "Bearer"
       ) {
         const token = req.headers.authorization.split(" ")[1] as string;
-        console.log(`token: ${JSON.stringify(token, null, 2)}`);
+        // console.log(`token: ${JSON.stringify(token, null, 2)}`);
         user = await getUser(token);
         // console.log(`put user on the context ${JSON.stringify(user, null, 2)}`);
+      } else {
+        // console.log(`No bearer token found in headers.`);
       }
 
       return { req, user };
@@ -140,7 +122,7 @@ const main = async () => {
 
   const corsOptions = {
     origin: "http://localhost:3000",
-    credentials: true,
+    credentials: false,
   };
 
   app.use(cors(corsOptions));

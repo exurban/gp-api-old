@@ -4,12 +4,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
-  // RelationId,
   UpdateDateColumn,
 } from "typeorm";
 import Photo from "./Photo";
+import Image from "./Image";
 
 @ObjectType()
 @Entity({ name: "photographers" })
@@ -42,11 +44,13 @@ export default class Photographer extends BaseEntity {
   @Column()
   email: string;
 
-  @Field({
-    description: "The URL for the artist's portrait.",
+  @Field(() => Image, {
+    description: "The Image for the artist's portrait.",
+    nullable: true,
   })
-  @Column()
-  photoUrl: string;
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  coverImage?: Image;
 
   @Field({
     description: "The artist's biography.",

@@ -55,6 +55,7 @@ export default class CollectionResolver {
   async collectionsWithPhotos(): Promise<Collection[]> {
     return await Collection.find({
       relations: [
+        "coverImage",
         "photosInCollection",
         "photosInCollection.photo",
         "photosInCollection.photo.location",
@@ -74,7 +75,22 @@ export default class CollectionResolver {
   async collection(
     @Arg("id", () => Int) id: number
   ): Promise<Collection | undefined> {
-    return await Collection.findOne(id);
+    return await Collection.findOne(id, {
+      relations: [
+        "coverImage",
+        "photosInCollection",
+        "photosInCollection.photo",
+        "photosInCollection.photo.location",
+        "photosInCollection.photo.photographer",
+        "photosInCollection.photo.images",
+        "photosInCollection.photo.subjectsInPhoto",
+        "photosInCollection.photo.subjectsInPhoto.subject",
+        "photosInCollection.photo.tagsForPhoto",
+        "photosInCollection.photo.tagsForPhoto.tag",
+        "photosInCollection.photo.collectionsForPhoto",
+        "photosInCollection.photo.collectionsForPhoto.collection",
+      ],
+    });
   }
 
   @Query(() => Collection)
@@ -83,6 +99,7 @@ export default class CollectionResolver {
   ): Promise<Collection | undefined> {
     return await Collection.findOne(id, {
       relations: [
+        "coverImage",
         "photosInCollection",
         "photosInCollection.photo",
         "photosInCollection.photo.location",

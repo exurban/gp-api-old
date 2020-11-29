@@ -11,9 +11,9 @@ import {
   OneToMany,
   JoinColumn,
   Generated,
-  BeforeInsert,
   AfterInsert,
   Index,
+  BeforeInsert,
 } from "typeorm";
 
 import Location from "./Location";
@@ -44,6 +44,11 @@ export default class Photo extends BaseEntity {
   sku: number;
 
   @Index()
+  @Field(() => Int)
+  @Column({ type: "int" })
+  sortIndex: number;
+
+  @Index()
   @Field()
   @Column({ default: "Untitled" })
   title: string;
@@ -54,15 +59,15 @@ export default class Photo extends BaseEntity {
 
   @Field()
   @Column("boolean", { default: false })
-  isDiscontinued: boolean;
-
-  @Field()
-  @Column("boolean", { default: false })
   isFeatured: boolean;
 
   @Field()
   @Column("boolean", { default: false })
   isLimitedEdition: boolean;
+
+  @Field()
+  @Column("boolean", { default: false })
+  isDiscontinued: boolean;
 
   @Field(() => Int)
   @Column("int", { default: 5 })
@@ -75,44 +80,46 @@ export default class Photo extends BaseEntity {
   basePrice: number;
 
   @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Column("float", { default: 1.0, nullable: true })
   priceModifier: number;
 
-  @Field(() => Photographer)
-  @ManyToOne(() => Photographer, (photographer) => photographer.photos)
+  @Field(() => Photographer, { nullable: true })
+  @ManyToOne(() => Photographer, (photographer) => photographer.photos, {
+    nullable: true,
+  })
   @JoinColumn()
-  photographer: Photographer;
+  photographer?: Photographer;
 
-  @Field(() => Location)
-  @ManyToOne(() => Location, (location) => location.photos)
+  @Field(() => Location, { nullable: true })
+  @ManyToOne(() => Location, (location) => location.photos, { nullable: true })
   @JoinColumn()
   location: Location;
 
-  @Field(() => [Image])
-  @OneToMany(() => Image, (img) => img.photo)
-  images: Image[];
+  @Field(() => [Image], { nullable: true })
+  @OneToMany(() => Image, (img) => img.photo, { cascade: true })
+  images: Promise<Image[]>;
 
-  @Field(() => [PhotoSubject])
+  @Field(() => [PhotoSubject], { nullable: true })
   @OneToMany(() => PhotoSubject, (ps) => ps.photo)
   subjectsInPhoto: Promise<PhotoSubject[]>;
 
-  @Field(() => [PhotoTag])
+  @Field(() => [PhotoTag], { nullable: true })
   @OneToMany(() => PhotoTag, (ps) => ps.photo)
   tagsForPhoto: Promise<PhotoTag[]>;
 
-  @Field(() => [PhotoCollection])
+  @Field(() => [PhotoCollection], { nullable: true })
   @OneToMany(() => PhotoCollection, (pc) => pc.photo)
   collectionsForPhoto: Promise<PhotoCollection[]>;
 
-  @Field(() => [PhotoFinish])
+  @Field(() => [PhotoFinish], { nullable: true })
   @OneToMany(() => PhotoFinish, (pc) => pc.photo)
   finishesForPhoto: Promise<PhotoFinish[]>;
 
-  @Field(() => [UserFavorite])
+  @Field(() => [UserFavorite], { nullable: true })
   @OneToMany(() => UserFavorite, (fav) => fav.photo)
   favoritedByUsers: Promise<UserFavorite[]>;
 
-  @Field(() => [UserShoppingBagItem])
+  @Field(() => [UserShoppingBagItem], { nullable: true })
   @OneToMany(() => UserShoppingBagItem, (sb) => sb.photo)
   inShoppingBagsOfUsers: UserShoppingBagItem[];
 
@@ -125,12 +132,24 @@ export default class Photo extends BaseEntity {
   updatedAt: Date;
 
   @BeforeInsert()
-  fakeSku() {
+  setTempSku() {
     this.sku = 1;
+  }
+
+  @BeforeInsert()
+  setTempSortIndex() {
+    this.sortIndex = 1;
   }
 
   @AfterInsert()
   setSku() {
     this.sku = this.skuGenerator + 1000;
+  }
+
+  @AfterInsert()
+  setSortIndex() {
+    const siString =
+      this.rating.toString + (this.skuGenerator + 1000).toString();
+    this.sortIndex = parseInt(siString);
   }
 }

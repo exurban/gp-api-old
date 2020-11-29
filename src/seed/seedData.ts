@@ -1,15 +1,38 @@
 export const locationData = [
-  { name: "Rocky Mountain National Park", tag: "rockies" },
-  { name: "Smoky Mountain National Park", tag: "smokies" },
-  { name: "Grand Tetons National Park", tag: "tetons" },
-  { name: "Northern Wisconsin", tag: "wi" },
-  { name: "South Padre Island", tag: "padre" },
+  {
+    name: "Rocky Mountain National Park",
+    tag: "rockies",
+    description:
+      "Rocky Mountain National Park in northern Colorado spans the Continental Divide and encompasses protected mountains, forests and alpine tundra. It's known for the Trail Ridge Road and the Old Fall River Road, drives that pass aspen trees and rivers. The Keyhole Route, a climb crossing vertical rock faces, leads up Longs Peak, the park’s tallest mountain",
+  },
+  {
+    name: "Great Smoky Mountains National Park",
+    tag: "smokies",
+    description:
+      "Great Smoky Mountains National Park straddles the border between North Carolina and Tennessee. The sprawling landscape encompasses lush forests and an abundance of wildflowers that bloom year-round. Streams, rivers and waterfalls appear along hiking routes that include a segment of the Appalachian Trail.",
+  },
+  {
+    name: "Grand Tetons National Park",
+    tag: "tetons",
+    description:
+      "Grand Teton National Park is in the northwest of the U.S state of Wyoming. It encompasses the Teton mountain range, the 4,000-meter Grand Teton peak, and the valley known as Jackson Hole. It’s a popular destination in summer for mountaineering, hiking, backcountry camping and fishing, linked to nearby Yellowstone National Park.",
+  },
+  {
+    name: "Northern Wisconsin",
+    tag: "wi",
+    description:
+      "The Northern Highland and Western Upland along with a part of the Central Plain occupies the western part of the state, with lowlands stretching to the shore of Lake Michigan. Wisconsin is third to Ontario and Michigan in the length of its Great Lakes coastline.",
+  },
+  {
+    name: "South Padre Island",
+    tag: "padre",
+    description:
+      "South Padre Island is a tropical oasis located off the southern tip of Texas. This barrier island offers the unsurpassed beauty of the Laguna Madre Bay and the Gulf of Mexico and is the ideal year-round destination for visitors seeking a getaway from the daily grind.",
+  },
 ];
 
 export const photographerData = [
   {
-    photoUrl:
-      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1651&q=80",
     firstName: "Boyd",
     lastName: "Gibbs",
     email: "boyd@gibbs-photography.com",
@@ -17,8 +40,6 @@ export const photographerData = [
       "dolore unde vel fuga enim iusto inventore laboriosam dolor qui veritatis ut eos amet quia et sed eligendi numquam est eos necessitatibus vitae et qui est provident vel omnis inventore",
   },
   {
-    photoUrl:
-      "https://images.unsplash.com/photo-1516357231954-91487b459602?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1652&q=80",
     firstName: "Scott",
     lastName: "Gibbs",
     email: "scott@gibbs-photography.com",

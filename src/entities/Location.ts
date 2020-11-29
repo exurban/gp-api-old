@@ -4,28 +4,58 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import Photo from "./Photo";
+import Image from "./Image";
 
 @ObjectType()
 @Entity({ name: "locations" })
 export default class Location extends BaseEntity {
-  @Field(() => ID)
+  @Field(() => ID, {
+    description:
+      "The ID of the location. It is unique, numeric and automatically-generated.",
+  })
   @PrimaryGeneratedColumn("increment")
   readonly id: number;
 
-  @Field()
+  @Field({
+    description: "The name of the Location. It is required and must be unique.",
+  })
   @Column({ unique: true })
   name: string;
 
-  @Field()
+  @Field({
+    description: "A tag for the Location. It is required and must be unique.",
+  })
   @Column({ unique: true })
   tag: string;
 
-  @Field(() => [Photo])
+  @Field({
+    nullable: true,
+    description:
+      "Optional. A description of the location, used as a vignette at the top of the Location's photos page.",
+  })
+  @Column("text", { nullable: true })
+  description?: string;
+
+  @Field(() => Image, {
+    description:
+      "Optional. A map of the location used in conenction with the vignette at the top of the Location's photos page.",
+    nullable: true,
+  })
+  @OneToOne(() => Image, { nullable: true, cascade: true })
+  @JoinColumn()
+  coverImage?: Image;
+
+  @Field(() => [Photo], {
+    nullable: true,
+    description: "Nullable. An array of photos taken at the Location.",
+  })
   @OneToMany(() => Photo, (photo) => photo.location)
   photos: Photo[];
 

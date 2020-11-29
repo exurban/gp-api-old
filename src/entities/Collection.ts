@@ -4,10 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import Image from "./Image";
 
 import PhotoCollection from "./PhotoCollection";
 
@@ -29,6 +32,11 @@ export default class Collection extends BaseEntity {
   @Field()
   @Column("text")
   description: string;
+
+  @Field({ nullable: true })
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  coverImage?: Image;
 
   @Field(() => [PhotoCollection])
   @OneToMany(() => PhotoCollection, (pc) => pc.collection)

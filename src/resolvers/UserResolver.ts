@@ -18,6 +18,7 @@ dotenv.config();
 import User from "../entities/User";
 import UserFavorite from "../entities/UserFavorite";
 import UserShoppingBagItem from "../entities/UserShoppingBagItem";
+import Photo from "../entities/Photo";
 
 interface Context {
   user: User;
@@ -55,7 +56,7 @@ export default class UserResolver {
   //* Repositories
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    // @InjectRepository(Photo) private photoRepository: Repository<Photo>,
+    @InjectRepository(Photo) private photoRepository: Repository<Photo>,
     @InjectRepository(UserFavorite)
     private userFavoriteRepository: Repository<UserFavorite>,
     @InjectRepository(UserShoppingBagItem)
@@ -89,29 +90,6 @@ export default class UserResolver {
   async userSummaries(): Promise<[User[], number]> {
     return await this.userRepository.findAndCount({
       relations: ["userFavorites", "userShoppingBagItems"],
-    });
-  }
-
-  @Authorized("USER")
-  @Query(() => [UserFavorite])
-  async getUserFavorites(
-    @Ctx() context: Context
-  ): Promise<UserFavorite[] | undefined> {
-    const userId = context.user.id;
-    return await this.userFavoriteRepository.find({
-      where: { userId: userId },
-      relations: [
-        "photo",
-        "photo.location",
-        "photo.photographer",
-        "photo.images",
-        "photo.tagsForPhoto",
-        "photo.tagsForPhoto.tag",
-        "photo.subjectsInPhoto",
-        "photo.subjectsInPhoto.subject",
-        "photo.collectionsForPhoto",
-        "photo.collectionsForPhoto.collection",
-      ],
     });
   }
 
@@ -171,6 +149,43 @@ export default class UserResolver {
   }
 
   // * FAVORITES
+  /** this should return:
+  /* true, if added successfully
+  /* false, if operation failed
+  /* a string if the userFavorite already existed
+  */
+  // * get User Favorites
+  @Authorized("USER")
+  @Query(() => [Photo], {
+    nullable: true,
+    description: "Returns all Photos favorited by the signed in User.",
+  })
+  async favorites(@Ctx() context: Context): Promise<Photo[] | undefined> {
+    const favorites = await this.userFavoriteRepository.find({
+      userId: context.user.id,
+    });
+    const photoIds = favorites?.map((x) => x.photoId);
+    let photos;
+
+    if (photoIds.length > 0) {
+      photos = await this.photoRepository
+        .createQueryBuilder("p")
+        .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.location", "l")
+        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+        .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
+        .leftJoinAndSelect("p.tagsForPhoto", "pt")
+        .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
+        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+        .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+        .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+        .getMany();
+    }
+
+    return photos;
+  }
+
   @Authorized("USER")
   @Mutation(() => Boolean)
   async addPhotoToFavorites(
@@ -266,6 +281,41 @@ export default class UserResolver {
         return false;
       }
     }
+  }
+
+  // * get User Shopping Bag Items
+  @Authorized("USER")
+  @Query(() => [Photo], {
+    nullable: true,
+    description:
+      "Returns all Photos in the shopping bag of the signed in User.",
+  })
+  async shoppingBagItems(
+    @Ctx() context: Context
+  ): Promise<Photo[] | undefined> {
+    const shoppingBagItems = await this.userShoppingBagRepository.find({
+      userId: context.user.id,
+    });
+    const photoIds = shoppingBagItems?.map((x) => x.photoId);
+    let photos;
+
+    if (photoIds.length > 0) {
+      photos = await this.photoRepository
+        .createQueryBuilder("p")
+        .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.location", "l")
+        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+        .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
+        .leftJoinAndSelect("p.tagsForPhoto", "pt")
+        .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
+        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+        .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+        .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+        .getMany();
+    }
+
+    return photos;
   }
 
   @Authorized("USER")

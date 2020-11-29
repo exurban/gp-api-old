@@ -39,6 +39,8 @@ const newPhotographers: Photographer[] = [];
 interface ILocation {
   name: string;
   tag: string;
+  description?: string;
+  coverImage?: Image;
 }
 
 interface ICollection {
@@ -61,7 +63,6 @@ interface IFinish {
 }
 
 interface IPhotographer {
-  photoUrl: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -135,6 +136,8 @@ const addLocations = (locations: ILocation[]): Location[] => {
     const loc = new Location();
     loc.name = l.name;
     loc.tag = l.tag;
+    loc.description = l?.description;
+    loc.coverImage = l?.coverImage;
     newLocations.push(loc);
   });
 
@@ -341,7 +344,7 @@ const seed = async () => {
       });
     } else {
       Object.assign(connectionOptions, {
-        name: "default",
+        type: "postgres",
         host: "localhost",
         port: 5432,
         username: "postgres",
@@ -438,11 +441,12 @@ const seed = async () => {
     process.exit(1);
   });
 
-  //* update sku
+  //* update sku & sort indices
   Promise.all(
     newPhotos.map(async (photo) => {
       await photoRepository.update(photo.id, {
         sku: photo.skuGenerator + 1000,
+        sortIndex: parseInt(photo.rating.toString() + photo.sku.toString()),
       });
     })
   );
