@@ -77,7 +77,7 @@ class AllPhotosAtLocationInput {
   id?: number;
 
   @Field(() => Int, { nullable: true })
-  first?: number;
+  cursor?: number;
 
   @Field(() => Int)
   take: number;
@@ -118,7 +118,7 @@ export default class LocationResolver {
 
     let items;
 
-    if (!input.first) {
+    if (!input.cursor) {
       items = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
@@ -151,7 +151,7 @@ export default class LocationResolver {
         .where("p.location.id = :locationId", {
           locationId: locationInfo.id,
         })
-        .andWhere("p.sortIndex < :first", { first: input.first })
+        .andWhere("p.sortIndex < :cursor", { cursor: input.cursor })
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
         .getMany();

@@ -47,7 +47,7 @@ class AllPhotosOfSubjectInput {
   subject: string;
 
   @Field(() => Int, { nullable: true })
-  first?: number;
+  cursor?: number;
 
   @Field(() => Int)
   take: number;

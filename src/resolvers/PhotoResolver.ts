@@ -92,7 +92,7 @@ class PhotoUpdateInput {
 @InputType()
 class AllPhotosInput {
   @Field(() => Int, { nullable: true })
-  first?: number;
+  cursor?: number;
 
   @Field(() => Int)
   take: number;
@@ -101,7 +101,7 @@ class AllPhotosInput {
 @InputType()
 class AllFeaturedPhotosInput {
   @Field(() => Int, { nullable: true })
-  first?: number;
+  cursor?: number;
 
   @Field(() => Int)
   take: number;

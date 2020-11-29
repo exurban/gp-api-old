@@ -47,7 +47,7 @@ class AllPhotosWithTagInput {
   tag: string;
 
   @Field(() => Int, { nullable: true })
-  first?: number;
+  cursor?: number;
 
   @Field(() => Int)
   take: number;
@@ -93,7 +93,7 @@ export default class SubjectResolver {
 
     let items;
 
-    if (!input.first) {
+    if (!input.cursor) {
       items = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
@@ -122,7 +122,7 @@ export default class SubjectResolver {
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
         .where("p.id IN (:...photoIds)", { photoIds: photoIds })
-        .andWhere("p.sortIndex < :first", { first: input.first })
+        .andWhere("p.sortIndex < :cursor", { cursor: input.cursor })
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
         .getMany();
