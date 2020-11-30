@@ -97,7 +97,7 @@ export default class Photo extends BaseEntity {
 
   @Field(() => [Image], { nullable: true })
   @OneToMany(() => Image, (img) => img.photo, { cascade: true })
-  images: Promise<Image[]>;
+  images: Image[];
 
   @Field(() => [PhotoSubject], { nullable: true })
   @OneToMany(() => PhotoSubject, (ps) => ps.photo)

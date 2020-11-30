@@ -89,10 +89,13 @@ class PhotographerNamedInput {
 @InputType()
 class AllPhotosByPhotographerInput {
   @Field({ nullable: true })
+  id?: number;
+
+  @Field({ nullable: true })
   firstName?: string;
 
   @Field({ nullable: true })
-  id?: number;
+  name?: string;
 
   @Field(() => Int, { nullable: true })
   cursor?: number;
@@ -123,13 +126,30 @@ export default class PhotographerResolver {
     @Arg("input", () => AllPhotosByPhotographerInput)
     input: AllPhotosByPhotographerInput
   ): Promise<PaginatedPhotosByPhotographerResponse> {
-    const pgInfo = await this.photographerRepository
-      .createQueryBuilder("pg")
-      .where("pg.id = :id", { id: input.id })
-      .orWhere("pg.firstName ilike :firstName", {
-        firstName: `%${input.firstName}%`,
-      })
-      .getOne();
+    let pgInfo;
+
+    if (input.id !== null && input.id !== undefined) {
+      pgInfo = await this.photographerRepository
+        .createQueryBuilder("pg")
+        .where("pg.id = :id", { id: input.id })
+        .getOne();
+    } else if (input.firstName !== null && input.firstName !== undefined) {
+      pgInfo = await this.photographerRepository
+        .createQueryBuilder("pg")
+        .orWhere("pg.firstName ilike :firstName", {
+          firstName: `%${input.firstName}%`,
+        })
+        .getOne();
+    } else if (input.name !== null && input.name !== undefined) {
+      const [fn, ln] = input.name.split(" ");
+      pgInfo = await this.photographerRepository
+        .createQueryBuilder("pg")
+        .where("pg.firstName ilike :firstName", { firstName: `%${fn}%` })
+        .andWhere("pg.lastName ilike :lastName", { lastName: `%${ln}` })
+        .getOne();
+    }
+
+    console.log(`${JSON.stringify(pgInfo, null, 2)}`);
 
     const photographerInfo = pgInfo as Photographer;
 

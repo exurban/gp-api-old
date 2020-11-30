@@ -353,7 +353,7 @@ input LocationNamedInput {
 input AllPhotosAtLocationInput {
   name: String
   id: Float
-  first: Int
+  cursor: Int
   take: Int!
 }
 
@@ -409,9 +409,10 @@ input PhotographerNamedInput {
 }
 
 input AllPhotosByPhotographerInput {
-  firstName: String
   id: Float
-  first: Int
+  firstName: String
+  name: String
+  cursor: Int
   take: Int!
 }
 
@@ -444,12 +445,12 @@ input PhotoUpdateInput {
 }
 
 input AllPhotosInput {
-  first: Int
+  cursor: Int
   take: Int!
 }
 
 input AllFeaturedPhotosInput {
-  first: Int
+  cursor: Int
   take: Int!
 }
 
@@ -467,7 +468,7 @@ input SubjectUpdateInput {
 
 input AllPhotosOfSubjectInput {
   subject: String!
-  first: Int
+  cursor: Int
   take: Int!
 }
 
@@ -485,7 +486,7 @@ input TagUpdateInput {
 
 input AllPhotosWithTagInput {
   tag: String!
-  first: Int
+  cursor: Int
   take: Int!
 }
 

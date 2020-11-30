@@ -146,7 +146,7 @@ export default class PhotoResolver {
 
     let items;
 
-    if (!input.first) {
+    if (!input.cursor) {
       items = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
@@ -173,7 +173,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
-        .where("p.sortIndex < :first", { first: input.first })
+        .where("p.sortIndex < :cursor", { cursor: input.cursor })
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
         .getMany();
@@ -201,7 +201,7 @@ export default class PhotoResolver {
 
     let items;
 
-    if (!input.first) {
+    if (!input.cursor) {
       items = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
@@ -230,7 +230,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
         .where("p.isFeatured = true")
-        .andWhere("p.sortIndex < :first", { first: input.first })
+        .andWhere("p.sortIndex < :cursor", { cursor: input.cursor })
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
         .getMany();

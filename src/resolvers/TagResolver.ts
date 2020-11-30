@@ -60,7 +60,7 @@ class PaginatedPhotosOfTagResponse extends PaginatedResponse(Photo) {
 }
 
 @Resolver(() => Tag)
-export default class SubjectResolver {
+export default class TagResolver {
   constructor(
     @InjectRepository(Tag) private tagRepository: Repository<Tag>,
     @InjectRepository(Photo) private photoRepository: Repository<Photo>,
@@ -74,12 +74,6 @@ export default class SubjectResolver {
   async allPhotosWithTag(
     @Arg("input", () => AllPhotosWithTagInput) input: AllPhotosWithTagInput
   ): Promise<PaginatedPhotosOfTagResponse> {
-    /**
-     * 1. query subject
-     * 2. query photoIds = photosOfSubject.photoId
-     * 3. query photoRepository where p.id IN photoIds
-     */
-
     const tagInfo = await this.tagRepository.findOneOrFail({
       where: { name: input.tag },
     });

@@ -120,8 +120,13 @@ const main = async () => {
 
   const app = Express();
 
+  // const corsOptions = {
+  //   origin: "http://localhost:3000",
+  //   credentials: false,
+  // };
+
   const corsOptions = {
-    origin: "http://localhost:3000",
+    origin: "https://gibbs-photography.com",
     credentials: false,
   };
 

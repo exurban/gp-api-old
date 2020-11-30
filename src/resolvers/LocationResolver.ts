@@ -116,6 +116,14 @@ export default class LocationResolver {
 
     const locationInfo = lInfo as Location;
 
+    const allPhotosTakenAtLocation = await this.photoRepository
+      .createQueryBuilder("p")
+      .where("p.location.id = :locationId", {
+        locationId: locationInfo.id,
+      })
+      .getMany();
+    const total = allPhotosTakenAtLocation.length;
+
     let items;
 
     if (!input.cursor) {
@@ -156,7 +164,7 @@ export default class LocationResolver {
         .take(input.take)
         .getMany();
     }
-    const total = items.length;
+
     const startCursor = items[0].sortIndex;
     const endCursor = items[items.length - 1].sortIndex;
 
