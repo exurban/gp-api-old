@@ -13,7 +13,6 @@ import {
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Photo from "../entities/Photo";
-import Image from "../entities/Image";
 import Photographer from "../entities/Photographer";
 import Location from "../entities/Location";
 import Subject from "../entities/Subject";
@@ -211,7 +210,6 @@ export default class PhotoResolver {
   //* Repositories
   constructor(
     @InjectRepository(Photo) private photoRepository: Repository<Photo>,
-    @InjectRepository(Image) private imageRepository: Repository<Image>,
 
     @InjectRepository(Photographer)
     private photographerRepository: Repository<Photographer>,
@@ -567,16 +565,8 @@ export default class PhotoResolver {
       ...input,
     });
     await this.photoRepository.insert(newPhoto);
-    const newImage = this.imageRepository.create({
-      size: "xl",
-      photo: newPhoto,
-    });
-
-    newPhoto.images[0] = newImage;
     await this.photoRepository.save(newPhoto);
 
-    console.log(`newPhoto: ${JSON.stringify(newPhoto, null, 2)}`);
-    console.log(`newImage: ${JSON.stringify(newImage, null, 2)}`);
     return newPhoto;
   }
 
