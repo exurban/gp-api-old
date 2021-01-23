@@ -1,19 +1,26 @@
-import { ClassType, Field, Int, ObjectType } from "type-graphql";
+import Photo from "../entities/Photo";
+import { Field, Int, ObjectType } from "type-graphql";
 
-export default function PaginatedResponse<TItem>(TItemClass: ClassType<TItem>) {
+export function PaginatedPhotosResponse<PaginatedResponse>() {
   @ObjectType({ isAbstract: true })
-  abstract class PaginatedResponseClass {
-    @Field(() => [TItemClass])
-    items: TItem[];
+  abstract class PaginatedPhotosResponseClass {
+    @Field(() => [Photo])
+    photos: Photo[];
 
-    @Field(() => Int)
-    startCursor: number;
-
-    @Field(() => Int)
-    endCursor: number;
-
-    @Field(() => Int)
-    total: number;
+    @Field(() => PaginatedResponse)
+    pageInfo: PaginatedResponse;
   }
-  return PaginatedResponseClass;
+  return PaginatedPhotosResponseClass;
+}
+
+@ObjectType()
+class PaginatedResponse {
+  @Field(() => Int)
+  startCursor: number;
+
+  @Field(() => Int)
+  endCursor: number;
+
+  @Field(() => Int)
+  total: number;
 }

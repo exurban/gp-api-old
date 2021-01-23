@@ -52,7 +52,7 @@ interface ICollection {
 interface IFinish {
   name: string;
   description: string;
-  photoUrl: string;
+  finSku: string;
   width: number;
   height: number;
   depth: number;
@@ -70,10 +70,10 @@ interface IPhotographer {
 }
 
 interface IImage {
+  imageName: string;
+  fileExtension: string;
   imageUrl: string;
   altText: string;
-  fileType: string;
-  fileExtension: string;
   size: string;
   width: number;
   height: number;
@@ -117,7 +117,7 @@ const addFinishes = (finishes: IFinish[]): Finish[] => {
     const fin = new Finish();
     fin.name = f.name;
     fin.description = f.description;
-    fin.photoUrl = f.photoUrl;
+    fin.finSku = f.finSku;
     fin.width = f.width;
     fin.height = f.height;
     fin.depth = f.depth;

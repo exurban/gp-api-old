@@ -80,7 +80,7 @@ export default class Photo extends BaseEntity {
   basePrice: number;
 
   @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1.0, nullable: true })
+  @Column("float", { default: 0, nullable: true })
   priceModifier: number;
 
   @Field(() => Photographer, { nullable: true })
@@ -95,25 +95,25 @@ export default class Photo extends BaseEntity {
   @JoinColumn()
   location: Location;
 
-  @Field(() => [Image], { nullable: true })
+  @Field(() => [Image])
   @OneToMany(() => Image, (img) => img.photo, { cascade: true })
   images: Image[];
 
   @Field(() => [PhotoSubject], { nullable: true })
   @OneToMany(() => PhotoSubject, (ps) => ps.photo)
-  subjectsInPhoto: Promise<PhotoSubject[]>;
+  subjectsInPhoto: PhotoSubject[];
 
   @Field(() => [PhotoTag], { nullable: true })
   @OneToMany(() => PhotoTag, (ps) => ps.photo)
-  tagsForPhoto: Promise<PhotoTag[]>;
+  tagsForPhoto: PhotoTag[];
 
   @Field(() => [PhotoCollection], { nullable: true })
   @OneToMany(() => PhotoCollection, (pc) => pc.photo)
-  collectionsForPhoto: Promise<PhotoCollection[]>;
+  collectionsForPhoto: PhotoCollection[];
 
   @Field(() => [PhotoFinish], { nullable: true })
   @OneToMany(() => PhotoFinish, (pc) => pc.photo)
-  finishesForPhoto: Promise<PhotoFinish[]>;
+  finishesForPhoto: PhotoFinish[];
 
   @Field(() => [UserFavorite], { nullable: true })
   @OneToMany(() => UserFavorite, (fav) => fav.photo)
@@ -148,8 +148,8 @@ export default class Photo extends BaseEntity {
 
   @AfterInsert()
   setSortIndex() {
-    const siString =
-      this.rating.toString + (this.skuGenerator + 1000).toString();
+    const siString = "5" + (this.skuGenerator + 1000).toString();
+    console.log(`Sort Index: ${siString}`);
     this.sortIndex = parseInt(siString);
   }
 }

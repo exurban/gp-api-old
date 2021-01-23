@@ -7,6 +7,7 @@ import {
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   Root,
@@ -14,6 +15,11 @@ import {
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Finish from "../entities/Finish";
+import Photo from "../entities/Photo";
+import Image from "../entities/Image";
+import PhotoFinish from "../entities/PhotoFinish";
+import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
+import GroupedResponse from "../abstract/GroupedResponse";
 
 //* Input Types
 @InputType()
@@ -24,8 +30,8 @@ class FinishInput {
   @Field()
   description: string;
 
-  @Field()
-  photoUrl: string;
+  @Field({ nullable: true })
+  coverImageId?: number;
 
   @Field()
   finSku: string;
@@ -61,7 +67,7 @@ class FinishUpdateInput {
   description?: string;
 
   @Field({ nullable: true })
-  photoUrl?: string;
+  coverImageId?: number;
 
   @Field({ nullable: true })
   finSku?: string;
@@ -88,67 +94,236 @@ class FinishUpdateInput {
   priceModifier?: number;
 }
 
+@InputType()
+class SearchFinishesInput {
+  @Field()
+  searchString: string;
+}
+
+@ObjectType()
+class SearchFinishesResponse {
+  @Field(() => [Finish])
+  datalist: Finish[];
+}
+
+// * GROUPED
+@InputType()
+class GroupedPhotosWithFinishInput {
+  @Field({ nullable: true })
+  id?: number;
+
+  @Field({ nullable: true })
+  name?: string;
+}
+
+@ObjectType()
+class GroupedPhotosWithFinishResponse extends GroupedResponse() {
+  @Field(() => Finish)
+  finishInfo: Finish;
+}
+
+// * PAGINATED
+@InputType()
+class PaginatedPhotosWithFinishInput {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  id?: number;
+
+  @Field(() => Int, { nullable: true })
+  cursor?: number;
+
+  @Field(() => Int)
+  take: number;
+}
+
+@ObjectType()
+class PaginatedPhotosWithFinishResponse extends PaginatedPhotosResponse() {
+  @Field(() => Finish)
+  finishInfo: Finish;
+}
+
 @Resolver(() => Finish)
 export default class FinishResolver {
   //* Repositories
   constructor(
     @InjectRepository(Finish)
-    private finishRepository: Repository<Finish>
+    private finishRepository: Repository<Finish>,
+    @InjectRepository(PhotoFinish)
+    private photoFinishRepository: Repository<PhotoFinish>,
+    @InjectRepository(Photo)
+    private photoRepository: Repository<Photo>,
+    @InjectRepository(Image)
+    private imageRepository: Repository<Image>
   ) {}
 
-  //* Queries
-  @Query(() => [Finish])
-  async finishes(): Promise<Finish[]> {
-    return await this.finishRepository.find();
-  }
-
-  @Query(() => [Finish])
-  async finishesWithPhotos(): Promise<Finish[]> {
-    return await this.finishRepository.find({
-      relations: [
-        "photosWithFinish",
-        "photosWithFinish.photo",
-        "photosWithFinish.photo.location",
-        "photosWithFinish.photo.photographer",
-        "photosWithFinish.photo.images",
-        "photosWithFinish.photo.subjectsInPhoto",
-        "photosWithFinish.photo.subjectsInPhoto.subject",
-        "photosWithFinish.photo.tagsForPhoto",
-        "photosWithFinish.photo.tagsForPhoto.tag",
-        "photosWithFinish.photo.collectionsForPhoto",
-        "photosWithFinish.photo.collectionsForPhoto.collection",
-      ],
+  // * Field Resolvers
+  @FieldResolver()
+  async countOfPhotos(@Root() finish: Finish): Promise<number> {
+    return await this.photoFinishRepository.count({
+      finishId: finish.id,
     });
   }
 
-  @Query(() => Finish, { nullable: true })
-  async finish(@Arg("id", () => Int) id: number) {
-    return await this.finishRepository.findOne(id);
-  }
-
-  @Query(() => Finish, { nullable: true })
-  async finishWithPhotos(@Arg("id", () => Int) id: number) {
-    return await this.finishRepository.findOne(id, {
-      relations: [
-        "photosWithFinish",
-        "photosWithFinish.photo",
-        "photosWithFinish.photo.location",
-        "photosWithFinish.photo.photographer",
-        "photosWithFinish.photo.images",
-        "photosWithFinish.photo.subjectsInPhoto",
-        "photosWithFinish.photo.subjectsInPhoto.subject",
-        "photosWithFinish.photo.tagsForPhoto",
-        "photosWithFinish.photo.tagsForPhoto.tag",
-        "photosWithFinish.photo.collectionsForPhoto",
-        "photosWithFinish.photo.collectionsForPhoto.collection",
-      ],
-    });
-  }
-
-  //* Field Resolvers
   @FieldResolver(() => String)
   finishSku(@Root() finish: Finish) {
     return `${finish.finSku}-${finish.height}x${finish.width}`;
+  }
+
+  // * Queries - Finish + Cover Image Only
+  @Query(() => SearchFinishesResponse, {
+    description: "Search Finishes. Returns Finish + Cover Image.",
+  })
+  async searchFinishes(
+    @Arg("input", () => SearchFinishesInput) input: SearchFinishesInput
+  ): Promise<SearchFinishesResponse> {
+    const searchString = input.searchString;
+
+    const finishes = await this.finishRepository
+      .createQueryBuilder("fin")
+      .leftJoinAndSelect("fin.coverImage", "ci")
+      .where("fin.name ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .where("fin.finSku ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("fin.description ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .getMany();
+
+    const response = { datalist: finishes };
+    return response;
+  }
+
+  @Query(() => Finish)
+  async finish(@Arg("id", () => Int) id: number): Promise<Finish | undefined> {
+    return await this.finishRepository.findOne(id, {
+      relations: ["coverImage"],
+    });
+  }
+
+  // * Queries = GROUPED Photos with Finish
+  @Query(() => GroupedPhotosWithFinishResponse)
+  async groupedPhotosWithFinish(
+    @Arg("input", () => GroupedPhotosWithFinishInput)
+    input: GroupedPhotosWithFinishInput
+  ): Promise<GroupedPhotosWithFinishResponse | undefined> {
+    const finishInfo = await this.finishRepository
+      .createQueryBuilder("f")
+      .where("f.id = :id", { id: input.id })
+      .orWhere("f.name ilike :name", { name: `%${input.name}%` })
+      .getOne();
+
+    if (!finishInfo) {
+      return undefined;
+    }
+
+    const photosWithFinish = await this.photoFinishRepository.find({
+      where: { finishId: finishInfo.id },
+    });
+    const photoIds = photosWithFinish.map((pf) => pf.photoId);
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .leftJoinAndSelect("p.finishesForPhoto", "pf")
+      .leftJoinAndSelect("pc.finish", "f", "f.id = pf.finishId")
+      .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    return {
+      finishInfo,
+      photos,
+    };
+  }
+
+  // * Queries - PAGINATED Photos with Finish
+  @Query(() => PaginatedPhotosWithFinishResponse)
+  async paginatedPhotosWithFinish(
+    @Arg("input", () => PaginatedPhotosWithFinishInput)
+    input: PaginatedPhotosWithFinishInput
+  ): Promise<PaginatedPhotosWithFinishResponse | undefined> {
+    const finishInfo = await this.finishRepository.findOne({
+      where: { name: input.name },
+    });
+
+    if (!finishInfo) {
+      return undefined;
+    }
+
+    const photosWithFinish = await this.photoFinishRepository.find({
+      where: { finishId: finishInfo.id },
+    });
+    const photoIds = photosWithFinish.map((pf) => pf.photoId);
+
+    const total = photoIds.length;
+
+    let photos;
+
+    if (!input.cursor) {
+      photos = await this.photoRepository
+        .createQueryBuilder("p")
+        .leftJoinAndSelect("p.location", "l")
+        .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+        .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+        .leftJoinAndSelect("p.tagsForPhoto", "pt")
+        .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+        .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+        .leftJoinAndSelect("p.finishesForPhoto", "pf")
+        .leftJoinAndSelect("pc.finish", "f", "f.id = pf.finishId")
+        .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+        .orderBy("p.sortIndex", "DESC")
+        .take(input.take)
+        .getMany();
+    } else {
+      photos = await this.photoRepository
+        .createQueryBuilder("p")
+        .leftJoinAndSelect("p.location", "l")
+        .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+        .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+        .leftJoinAndSelect("p.tagsForPhoto", "pt")
+        .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+        .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+        .leftJoinAndSelect("p.finishesForPhoto", "pf")
+        .leftJoinAndSelect("pc.finish", "f", "f.id = pf.finishId")
+        .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+        .andWhere("p.sortIndex < :cursor", { cursor: input.cursor })
+        .orderBy("p.sortIndex", "DESC")
+        .take(input.take)
+        .getMany();
+    }
+
+    const pageInfo = {
+      startCursor: photos[0].sortIndex,
+      endCursor: photos[photos.length - 1].sortIndex,
+      total: total,
+    };
+
+    console.log(`returning ${photos.length} of ${pageInfo.total} photos.`);
+
+    return {
+      finishInfo,
+      pageInfo,
+      photos,
+    };
   }
 
   //* Mutations
@@ -157,7 +332,7 @@ export default class FinishResolver {
   async addFinish(
     @Arg("input", () => FinishInput) input: FinishInput
   ): Promise<Finish> {
-    return await this.finishRepository.create(input).save();
+    return await this.finishRepository.create({ ...input }).save();
   }
 
   @Authorized("ADMIN")
@@ -170,9 +345,16 @@ export default class FinishResolver {
     if (!finish) {
       throw new Error(`No finish with an id of ${id} exists.`);
     }
-    await this.finishRepository.update(id, { ...input });
-    const updatedFinish = await this.finishRepository.findOne(id);
-    return updatedFinish;
+    if (input.coverImageId && finish) {
+      const image = await this.imageRepository.findOne(input.coverImageId);
+      finish.coverImage = image;
+      await this.finishRepository.save(finish);
+      delete input.coverImageId;
+    }
+    const updatedFinish = { ...finish, ...input };
+    const f = await this.finishRepository.save(updatedFinish);
+
+    return f;
   }
 
   @Authorized("ADMIN")

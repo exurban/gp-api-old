@@ -1,39 +1,52 @@
-import { Field, Float, ID, ObjectType } from "type-graphql";
+import { Field, Float, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  Index,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import PhotoFinish from "./PhotoFinish";
+import Image from "./Image";
 
 @ObjectType()
 @Entity({ name: "finishes" })
 export default class Finish extends BaseEntity {
+  @Index()
   @Field(() => ID)
-  @PrimaryGeneratedColumn("increment")
-  readonly id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Field()
+  @Index()
+  @Field({ description: "The name of the finish." })
   @Column()
   name: string;
 
-  @Field()
+  @Field({
+    description:
+      "Optional. A description of the tag used in connection with the vignette for the finish.",
+  })
   @Column()
   description: string;
 
-  @Field()
-  @Column()
-  photoUrl: string;
+  @Field(() => Image, {
+    nullable: true,
+    description: "Optional. An image of the finish.",
+  })
+  @OneToOne(() => Image)
+  @JoinColumn()
+  coverImage?: Image;
 
   @Field({
-    nullable: true,
-    description: "finSku: Finish SKU. imgSku + finSku = ProductSku.",
+    description:
+      "SKU for the type of finish. Combined with width & height to create FinishSKU, which is auto-generated as a Field Resolver. ProductSKU = sku-finSku-heightxwidth",
   })
-  @Column({ unique: true, nullable: true })
+  @Column()
   finSku: string;
 
   @Field(() => Float)
@@ -64,9 +77,14 @@ export default class Finish extends BaseEntity {
   @Column("float")
   priceModifier: number;
 
-  @Field(() => [PhotoFinish])
-  @OneToMany(() => PhotoFinish, (pf) => pf.finish)
-  photosWithFinish: Promise<PhotoFinish[]>;
+  @Field(() => [PhotoFinish], { nullable: true })
+  @OneToMany(() => PhotoFinish, (pf) => pf.finish, { nullable: true })
+  photosWithFinish?: Promise<PhotoFinish[]>;
+
+  @Field(() => Int, {
+    description: "Count of photos available with the finish.",
+  })
+  countOfPhotos: number;
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

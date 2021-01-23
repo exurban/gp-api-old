@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import Express from "express";
-import cors from "cors";
+// import cors from "cors";
 import jwt from "jsonwebtoken";
 import { buildSchema } from "type-graphql";
 import { Container } from "typedi";
@@ -85,7 +85,7 @@ const main = async () => {
   // await createConnection();
 
   const schema = await buildSchema({
-    resolvers: [__dirname + "/resolvers/*.{ts,js}"],
+    resolvers: [__dirname + "/resolvers/**/*.{ts,js}"],
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       commentDescriptions: true,
@@ -101,7 +101,7 @@ const main = async () => {
     playground: true,
     context: async ({ req }) => {
       let user;
-      console.log(`rec'd req with body: ${JSON.stringify(req.body, null, 2)}`);
+      // console.log(`rec'd req with body: ${JSON.stringify(req.body, null, 2)}`);
       if (
         req.headers.authorization &&
         req.headers.authorization.split(" ")[0] === "Bearer"
@@ -125,12 +125,12 @@ const main = async () => {
   //   credentials: false,
   // };
 
-  const corsOptions = {
-    origin: "https://gibbs-photography.com",
-    credentials: false,
-  };
+  // const corsOptions = {
+  //   origin: "https://gibbs-photography.com",
+  //   credentials: false,
+  // };
 
-  app.use(cors(corsOptions));
+  // app.use(cors(corsOptions));
 
   apolloServer.applyMiddleware({ path: "/", app });
 

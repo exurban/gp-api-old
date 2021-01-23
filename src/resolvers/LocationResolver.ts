@@ -2,27 +2,31 @@ import {
   Arg,
   Authorized,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Location from "../entities/Location";
 import Image from "../entities/Image";
 import Photo from "../entities/Photo";
-import PaginatedResponse from "../abstract/PaginatedResponse";
+import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
+import GroupedResponse from "../abstract/GroupedResponse";
+import { SortDirection } from "../abstract/Enum";
 
 //* Input Types
 @InputType({ description: "Inputs to create a new Location entity." })
 class LocationInput {
-  @Field()
+  @Field({ description: "Name of the location." })
   name: string;
 
-  @Field()
+  @Field({ description: "Tag used to ID the location in Photo Info links." })
   tag: string;
 
   @Field({ nullable: true, description: "Vignette describing the location." })
@@ -37,7 +41,7 @@ class LocationInput {
 }
 
 @InputType({
-  description: "Optional inputs to be used to update the Location's metadata.",
+  description: "Optional inputs to be used to update the Location Info.",
 })
 class LocationUpdateInput {
   @Field({ nullable: true, description: "Optional. Name of the Location." })
@@ -60,16 +64,58 @@ class LocationUpdateInput {
   coverImageId?: number;
 }
 
-@InputType({
-  description: "Input to retrieve Location and Location's Photos.",
-})
-class LocationNamedInput {
+@InputType()
+class SearchLocationsInput {
   @Field()
-  name: string;
+  searchString: string;
+}
+
+@ObjectType()
+class SearchLocationsResponse {
+  @Field(() => [Location])
+  datalist: Location[];
 }
 
 @InputType()
-class AllPhotosAtLocationInput {
+class LocationSearchSortInput {
+  @Field({ nullable: true })
+  filter?: string;
+
+  @Field({ nullable: true, defaultValue: "name" })
+  orderBy?: string;
+
+  @Field(() => SortDirection, {
+    nullable: true,
+    defaultValue: SortDirection.ASC,
+  })
+  direction?: SortDirection;
+}
+
+@ObjectType()
+class LocationsResponse {
+  @Field(() => [Location])
+  locations: Location[];
+}
+
+// * GROUPED
+@InputType()
+class GroupedPhotosAtLocationInput {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  id?: number;
+}
+
+@ObjectType()
+class GroupedPhotosAtLocationResponse extends GroupedResponse() {
+  @Field(() => Location)
+  locationInfo: Location;
+}
+
+// * PAGINATED
+@InputType()
+class PaginatedPhotosAtLocationInput {
   @Field({ nullable: true })
   name?: string;
 
@@ -84,7 +130,7 @@ class AllPhotosAtLocationInput {
 }
 
 @ObjectType()
-class PaginatedPhotosAtLocationResponse extends PaginatedResponse(Photo) {
+class PaginatedPhotosAtLocationResponse extends PaginatedPhotosResponse() {
   @Field(() => Location)
   locationInfo: Location;
 }
@@ -99,14 +145,138 @@ export default class LocationResolver {
     @InjectRepository(Image) private imageRepository: Repository<Image>
   ) {}
 
-  //* Queries
+  @FieldResolver()
+  async countOfPhotos(@Root() location: Location): Promise<number> {
+    return await this.photoRepository.count({
+      where: { location: location },
+    });
+  }
+
+  // * Queries - Location + Cover Image Only
+  @Query(() => LocationsResponse, {
+    description:
+      "Returns all Locations + cover images. Sortable and filterable.",
+  })
+  async locations(
+    @Arg("input", () => LocationSearchSortInput) input: LocationSearchSortInput
+  ): Promise<LocationsResponse> {
+    const filter = input.filter || "";
+    const orderString = `loc.${input.orderBy}` || "name";
+    const dir = input.direction || SortDirection.ASC;
+
+    const locs = await this.locationRepository
+      .createQueryBuilder("loc")
+      .leftJoinAndSelect("loc.coverImage", "ci")
+      .where("loc.name ilike :filter", { filter: `%${filter}%` })
+      .orWhere("loc.description ilike :filter", { filter: `%${filter}%` })
+      .orderBy(orderString, dir)
+      .getMany();
+
+    const response = { locations: locs };
+    return response;
+  }
+
+  @Query(() => SearchLocationsResponse, {
+    description: "Search locations. Returns Location + Cover Image.",
+  })
+  async searchLocations(
+    @Arg("input", () => SearchLocationsInput) input: SearchLocationsInput
+  ): Promise<SearchLocationsResponse> {
+    const searchString = input.searchString;
+
+    const locs = await this.locationRepository
+      .createQueryBuilder("loc")
+      .leftJoinAndSelect("loc.coverImage", "ci")
+      .where("loc.name ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .where("loc.tag ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("loc.description ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .getMany();
+
+    const response = { datalist: locs };
+    return response;
+  }
+
+  @Query(() => Location, {
+    nullable: true,
+    description:
+      "Returns one Location + portrait, only or null, if no matching id is found. Meant to be used on the backend.",
+  })
+  async location(
+    @Arg("id", () => Int) id: number
+  ): Promise<Location | undefined> {
+    return this.locationRepository.findOne(id, {
+      relations: ["coverImage"],
+    });
+  }
+
+  @Query(() => Location, {
+    nullable: true,
+    description:
+      "Returns one Location + portrait, only or null, if no matching name is found.",
+  })
+  async locationWithName(
+    @Arg("name", () => String) name: string
+  ): Promise<Location | undefined> {
+    return this.locationRepository.findOne({
+      where: { name: name },
+      relations: ["coverImage"],
+    });
+  }
+
+  // * Queries - GROUPED Photos At Location
+
+  @Query(() => GroupedPhotosAtLocationResponse)
+  async groupedPhotosAtLocation(
+    @Arg("input", () => GroupedPhotosAtLocationInput)
+    input: GroupedPhotosAtLocationInput
+  ): Promise<GroupedPhotosAtLocationResponse | undefined> {
+    const locationInfo = await this.locationRepository
+      .createQueryBuilder("l")
+      .where("l.id = :id", { id: input.id })
+      .orWhere("l.name ilike :name", { name: `%${input.name}%` })
+      .getOne();
+
+    if (!locationInfo) {
+      return undefined;
+    }
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.location.id = :locationId", {
+        locationId: locationInfo.id,
+      })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    return {
+      locationInfo,
+      photos,
+    };
+  }
+
+  // * Queries - PAGINATED Photos At Location
 
   @Query(() => PaginatedPhotosAtLocationResponse)
-  async allPhotosAtLocation(
-    @Arg("input", () => AllPhotosAtLocationInput)
-    input: AllPhotosAtLocationInput
-  ): Promise<PaginatedPhotosAtLocationResponse> {
-    const lInfo = await this.locationRepository
+  async paginatedPhotosAtLocation(
+    @Arg("input", () => PaginatedPhotosAtLocationInput)
+    input: PaginatedPhotosAtLocationInput
+  ): Promise<PaginatedPhotosAtLocationResponse | undefined> {
+    const locationInfo = await this.locationRepository
       .createQueryBuilder("l")
       .where("l.id = :id", { id: input.id })
       .orWhere("l.name ilike :name", {
@@ -114,20 +284,14 @@ export default class LocationResolver {
       })
       .getOne();
 
-    const locationInfo = lInfo as Location;
+    if (!locationInfo) {
+      return undefined;
+    }
 
-    const allPhotosTakenAtLocation = await this.photoRepository
-      .createQueryBuilder("p")
-      .where("p.location.id = :locationId", {
-        locationId: locationInfo.id,
-      })
-      .getMany();
-    const total = allPhotosTakenAtLocation.length;
-
-    let items;
+    let photos;
 
     if (!input.cursor) {
-      items = await this.photoRepository
+      photos = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
@@ -145,7 +309,7 @@ export default class LocationResolver {
         .take(input.take)
         .getMany();
     } else {
-      items = await this.photoRepository
+      photos = await this.photoRepository
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
@@ -165,63 +329,21 @@ export default class LocationResolver {
         .getMany();
     }
 
-    const startCursor = items[0].sortIndex;
-    const endCursor = items[items.length - 1].sortIndex;
+    const total = await this.photoRepository.count({
+      where: { locationId: locationInfo.id },
+    });
+
+    const pageInfo = {
+      startCursor: photos[0].sortIndex,
+      endCursor: photos[photos.length - 1].sortIndex,
+      total: total,
+    };
 
     return {
       locationInfo,
-      items,
-      startCursor,
-      endCursor,
-      total,
+      pageInfo,
+      photos,
     };
-  }
-
-  @Query(() => [Location], {
-    description:
-      "Returns all Locations + maps, only. Meant to be used on the backend.",
-  })
-  locations(): Promise<Location[]> {
-    return this.locationRepository.find({
-      relations: ["coverImage"],
-    });
-  }
-
-  @Query(() => Location, {
-    nullable: true,
-    description:
-      "Returns one Location + portrait, only or null, if no matching id is found. Meant to be used on the backend.",
-  })
-  async location(@Arg("id", () => Int) id: number) {
-    return this.locationRepository.findOne(id, {
-      relations: ["coverImage"],
-    });
-  }
-
-  @Query(() => Location, {
-    nullable: true,
-    description:
-      "Returns one Location + portrait AND Location's Photos and related data, or undefined if no Location matching name provided is found. Meant to be used on the frontend. Used for the Location's Gallery.",
-  })
-  async locationNamed(
-    @Arg("input", () => LocationNamedInput) input: LocationNamedInput
-  ): Promise<Location | undefined> {
-    const location = await this.locationRepository
-      .createQueryBuilder("l")
-      .leftJoinAndSelect("l.coverImage", "li")
-      .leftJoinAndSelect("l.photos", "p")
-      .leftJoinAndSelect("p.photographer", "pg")
-      .leftJoinAndSelect("p.location", "lp")
-      .leftJoinAndSelect("p.images", "i")
-      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
-      .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
-      .leftJoinAndSelect("p.tagsForPhoto", "pt")
-      .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
-      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
-      .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
-      .where("l.name ilike :name", { name: `%${input.name}%` })
-      .getOne();
-    return location;
   }
 
   //* Mutations

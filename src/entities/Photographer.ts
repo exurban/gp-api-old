@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { Field, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -20,11 +20,11 @@ export default class Photographer extends BaseEntity {
   @PrimaryGeneratedColumn()
   readonly id: number;
 
-  // derived value composed of firstName + lastName
   @Field({
-    description: "Derived field that returns `${firstName} ${lastName}`",
+    description: "The artist's full name",
   })
-  readonly name: string;
+  @Column()
+  name: string;
 
   @Field({
     description: "The artist's first name.",
@@ -60,9 +60,15 @@ export default class Photographer extends BaseEntity {
 
   @Field(() => [Photo], {
     description: "Photos attributed to the artist.",
+    nullable: true,
   })
-  @OneToMany(() => Photo, (photo) => photo.photographer)
-  photos: Photo[];
+  @OneToMany(() => Photo, (photo) => photo.photographer, { nullable: true })
+  photos?: Photo[];
+
+  @Field(() => Int, {
+    description: "Count of photos attributed to the photographer on the site.",
+  })
+  countOfPhotos: number;
 
   @Field({
     description: "Date record was created.",

@@ -21,19 +21,19 @@ export default class Image extends BaseEntity {
 
   @Field()
   @Column()
+  imageName: string;
+
+  @Field()
+  @Column()
+  fileExtension: string;
+
+  @Field()
+  @Column()
   imageUrl: string;
 
   @Field()
   @Column()
   altText: string;
-
-  @Field()
-  @Column()
-  fileType: string;
-
-  @Field()
-  @Column()
-  fileExtension: string;
 
   @Field()
   @Column()

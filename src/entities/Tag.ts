@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { Field, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -47,9 +47,15 @@ export default class Tag extends BaseEntity {
   @Field(() => [PhotoTag], {
     description:
       "A connection through a join table to the photos tagged with the tag.",
+    nullable: true,
   })
-  @OneToMany(() => PhotoTag, (pt) => pt.tag)
-  photosWithTag: Promise<PhotoTag[]>;
+  @OneToMany(() => PhotoTag, (pt) => pt.tag, { nullable: true })
+  photosWithTag?: Promise<PhotoTag[]>;
+
+  @Field(() => Int, {
+    description: "Count of photos of the tag on the site.",
+  })
+  countOfPhotos: number;
 
   @Field()
   @CreateDateColumn()

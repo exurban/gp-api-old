@@ -17,16 +17,16 @@ import Photo from "../entities/Photo";
 @InputType()
 class ImageInput {
   @Field()
+  imageName: string;
+
+  @Field()
+  fileExtension: string;
+
+  @Field()
   imageUrl: string;
 
   @Field()
   altText: string;
-
-  @Field()
-  fileType: string;
-
-  @Field()
-  fileExtension: string;
 
   @Field()
   size: string;
@@ -44,16 +44,16 @@ class ImageInput {
 @InputType()
 class ImageUpdateInput {
   @Field({ nullable: true })
+  imageName?: string;
+
+  @Field({ nullable: true })
+  fileExtension?: string;
+
+  @Field({ nullable: true })
   imageUrl?: string;
 
   @Field({ nullable: true })
   altText?: string;
-
-  @Field({ nullable: true })
-  fileType?: string;
-
-  @Field({ nullable: true })
-  fileExtension?: string;
 
   @Field({ nullable: true })
   size?: string;

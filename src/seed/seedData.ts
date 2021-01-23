@@ -33,6 +33,7 @@ export const locationData = [
 
 export const photographerData = [
   {
+    name: "Boyd Gibbs",
     firstName: "Boyd",
     lastName: "Gibbs",
     email: "boyd@gibbs-photography.com",
@@ -40,6 +41,7 @@ export const photographerData = [
       "dolore unde vel fuga enim iusto inventore laboriosam dolor qui veritatis ut eos amet quia et sed eligendi numquam est eos necessitatibus vitae et qui est provident vel omnis inventore",
   },
   {
+    name: "Scott Gibbs",
     firstName: "Scott",
     lastName: "Gibbs",
     email: "scott@gibbs-photography.com",
@@ -50,82 +52,91 @@ export const photographerData = [
 
 export const imageData = [
   {
-    imageUrl: "/images/sdg1xl.webp",
+    imageName: "sdg1",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg1",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg2xl.webp",
+    imageName: "sdg2",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg2",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg3xl.webp",
+    imageName: "sdg3",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg3",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg4xl.webp",
+    imageName: "sdg4",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg4",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg5xl.webp",
+    imageName: "sdg5",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg5",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg6xl.webp",
+    imageName: "sdg6",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg6",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg7xl.webp",
+    imageName: "sdg7",
+    fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
     altText: "sdg7",
-    fileType: "webp",
-    fileExtension: ".webp",
     size: "xl",
     width: 1400,
     height: 935,
   },
   {
-    imageUrl: "/images/sdg8xl.webp",
-    altText: "sdg8",
-    fileType: "webp",
+    imageName: "sdg8",
     fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+    altText: "sdg8",
     size: "xl",
     width: 935,
     height: 1400,
   },
   {
-    imageUrl: "/images/sdg9xl.webp",
-    altText: "sdg9",
-    fileType: "webp",
+    imageName: "sdg9",
     fileExtension: ".webp",
+    imageUrl:
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+    altText: "sdg9",
     size: "xl",
     width: 1400,
     height: 935,
@@ -170,8 +181,7 @@ export const finishData = [
     name: "Fine Art Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FAP",
+    finSku: "FAP",
     width: 18,
     height: 12,
     depth: 1,
@@ -185,8 +195,7 @@ export const finishData = [
     name: "Fine Art Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FAP",
+    finSku: "FAP",
     height: 16,
     width: 20,
     depth: 1,
@@ -199,8 +208,7 @@ export const finishData = [
     name: "Fine Art Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FAP",
+    finSku: "FAP",
     height: 20,
     width: 30,
     depth: 1,
@@ -213,8 +221,7 @@ export const finishData = [
     name: "Fine Art Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FAP",
+    finSku: "FAP",
     height: 30,
     width: 40,
     depth: 1,
@@ -227,8 +234,7 @@ export const finishData = [
     name: "Framed Metal Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FMP",
+    finSku: "FMP",
     height: 12,
     width: 18,
     depth: 1,
@@ -242,8 +248,7 @@ export const finishData = [
     name: "Framed Metal Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FMP",
+    finSku: "FMP",
     height: 16,
     width: 20,
     depth: 1,
@@ -256,8 +261,7 @@ export const finishData = [
     name: "Framed Metal Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FMP",
+    finSku: "FMP",
     height: 20,
     width: 30,
     depth: 1,
@@ -270,8 +274,7 @@ export const finishData = [
     name: "Framed Metal Print",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    photoUrl: "images/fine_art_print.webp",
-    finishSku: "FMP",
+    finSku: "FMP",
     height: 30,
     width: 40,
     depth: 1,

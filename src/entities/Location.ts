@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { Field, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -56,8 +56,13 @@ export default class Location extends BaseEntity {
     nullable: true,
     description: "Nullable. An array of photos taken at the Location.",
   })
-  @OneToMany(() => Photo, (photo) => photo.location)
-  photos: Photo[];
+  @OneToMany(() => Photo, (photo) => photo.location, { nullable: true })
+  photos?: Photo[];
+
+  @Field(() => Int, {
+    description: "Count of photos taken at the location on the site.",
+  })
+  countOfPhotos: number;
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

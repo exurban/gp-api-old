@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { Field, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -38,9 +38,14 @@ export default class Collection extends BaseEntity {
   @JoinColumn()
   coverImage?: Image;
 
-  @Field(() => [PhotoCollection])
-  @OneToMany(() => PhotoCollection, (pc) => pc.collection)
-  photosInCollection: Promise<PhotoCollection[]>;
+  @Field(() => [PhotoCollection], { nullable: true })
+  @OneToMany(() => PhotoCollection, (pc) => pc.collection, { nullable: true })
+  photosInCollection?: Promise<PhotoCollection[]>;
+
+  @Field(() => Int, {
+    description: "Count of photos in the collection.",
+  })
+  countOfPhotos: number;
 
   @Field()
   @CreateDateColumn()
