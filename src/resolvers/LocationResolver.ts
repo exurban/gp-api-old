@@ -19,23 +19,23 @@ import Photo from "../entities/Photo";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import GroupedResponse from "../abstract/GroupedResponse";
 import { SortDirection } from "../abstract/Enum";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
 @InputType({ description: "Inputs to create a new Location entity." })
-class LocationInput {
+class AddLocationInput {
   @Field({ description: "Name of the location." })
   name: string;
 
   @Field({ description: "Tag used to ID the location in Photo Info links." })
   tag: string;
 
-  @Field({ nullable: true, description: "Vignette describing the location." })
-  description?: string;
+  @Field({ description: "Vignette describing the location." })
+  description: string;
 
-  @Field({
+  @Field(() => Int, {
+    description: "id for cover image.",
     nullable: true,
-    description:
-      "Map of the location. Used at the top of the Location's Photo Gallery. Used to look up the Map and add it to the One-to-One relationship.",
   })
   coverImageId?: number;
 }
@@ -43,8 +43,11 @@ class LocationInput {
 @InputType({
   description: "Optional inputs to be used to update the Location Info.",
 })
-class LocationUpdateInput {
-  @Field({ nullable: true, description: "Optional. Name of the Location." })
+class UpdateLocationInput {
+  @Field({
+    nullable: true,
+    description: "Optional. Name of the Location.",
+  })
   name?: string;
 
   @Field({
@@ -97,6 +100,28 @@ class LocationsResponse {
   locations: Location[];
 }
 
+// * ALL
+@InputType()
+class AllPhotosAtLocationInput {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  id?: number;
+}
+
+@ObjectType()
+class AllPhotosAtLocationResponse {
+  @Field(() => Location)
+  locationInfo: Location;
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
+}
+
 // * GROUPED
 @InputType()
 class GroupedPhotosAtLocationInput {
@@ -133,6 +158,18 @@ class PaginatedPhotosAtLocationInput {
 class PaginatedPhotosAtLocationResponse extends PaginatedPhotosResponse() {
   @Field(() => Location)
   locationInfo: Location;
+}
+
+@ObjectType()
+class AddLocationResponse extends SuccessMessageResponse {
+  @Field(() => Location, { nullable: true })
+  newLocation?: Location;
+}
+
+@ObjectType()
+class UpdateLocationResponse extends SuccessMessageResponse {
+  @Field(() => Location, { nullable: true })
+  updatedLocation?: Location;
 }
 
 @Resolver(() => Location)
@@ -346,35 +383,112 @@ export default class LocationResolver {
     };
   }
 
+  // * Queries - ALL Photos At Location
+
+  @Query(() => AllPhotosAtLocationResponse)
+  async allPhotosAtLocation(
+    @Arg("input", () => AllPhotosAtLocationInput)
+    input: AllPhotosAtLocationInput
+  ): Promise<AllPhotosAtLocationResponse | undefined> {
+    let locationInfo;
+
+    if (input.id) {
+      locationInfo = await this.locationRepository
+        .createQueryBuilder("l")
+        .where("l.id = :id", { id: input.id })
+
+        .getOne();
+    } else if (input.name) {
+      locationInfo = await this.locationRepository
+        .createQueryBuilder("l")
+        .where("l.name ilike :name", {
+          name: `%${input.name}%`,
+        })
+        .getOne();
+    }
+
+    if (!locationInfo) {
+      return undefined;
+    }
+
+    console.log(JSON.stringify(locationInfo, null, 2));
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.location.id = :locationId", {
+        locationId: locationInfo.id,
+      })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    const total = photos.length;
+
+    console.log(`returning ${total} photos.`);
+    return {
+      locationInfo,
+      total,
+      photos,
+    };
+  }
+
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Location)
+  @Mutation(() => AddLocationResponse)
   async addLocation(
-    @Arg("input", () => LocationInput) input: LocationInput
-  ): Promise<Location> {
-    return await this.locationRepository.create(input).save();
+    @Arg("input", () => AddLocationInput) input: AddLocationInput
+  ): Promise<AddLocationResponse> {
+    const newLocation = await this.locationRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newLocation.coverImage = coverImage;
+    }
+    await this.locationRepository.insert(newLocation);
+    await this.locationRepository.save(newLocation);
+
+    return {
+      success: true,
+      message: `Successfully created new Location: ${input.name}`,
+      newLocation: newLocation,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Location, { nullable: true })
+  @Mutation(() => UpdateLocationResponse)
   async updateLocation(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => LocationUpdateInput) input: LocationUpdateInput
-  ): Promise<Location | undefined> {
-    const loc = await this.locationRepository.findOne(id);
-    if (!loc) {
-      throw new Error(`No location with an id of ${id} exists.`);
+    @Arg("input", () => UpdateLocationInput) input: UpdateLocationInput
+  ): Promise<UpdateLocationResponse> {
+    const location = await this.locationRepository.findOne(id);
+    if (!location) {
+      return {
+        success: false,
+        message: `Couldn't find location with id: ${id}`,
+      };
     }
-    if (input.coverImageId && loc) {
-      const image = await this.imageRepository.findOne(input.coverImageId);
-      loc.coverImage = image;
-      await this.locationRepository.save(loc);
-      delete input.coverImageId;
-    }
-    const updatedLocation = { ...loc, ...input };
-    const l = await this.locationRepository.save(updatedLocation);
 
-    return l;
+    const updatedLocation = { ...location, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedLocation.coverImage = coverImage;
+    }
+    const loc = await this.locationRepository.save(updatedLocation);
+
+    return {
+      success: true,
+      message: `Successfully updated ${loc.name}`,
+      updatedLocation: loc,
+    };
   }
 
   @Authorized("ADMIN")

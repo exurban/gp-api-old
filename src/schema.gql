@@ -12,6 +12,8 @@ type Image {
   size: String!
   width: Int!
   height: Int!
+  isPortrait: Boolean!
+  isPanoramic: Boolean!
   photo: Photo
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -30,8 +32,8 @@ type Location {
   # A tag for the Location. It is required and must be unique.
   tag: String!
 
-  # Optional. A description of the location, used as a vignette at the top of the Location's photos page.
-  description: String
+  # A description of the location, used as a vignette at the top of the Location's photos page.
+  description: String!
 
   # Optional. A map of the location used in conenction with the vignette at the top of the Location's photos page.
   coverImage: Image
@@ -50,6 +52,8 @@ type Collection {
   name: String!
   tag: String!
   description: String!
+
+  # Optional. An image of the tag used in connection with the vignetter at the top of the Tag's photos page.
   coverImage: Image
   photosInCollection: [PhotoCollection!]
 
@@ -129,7 +133,7 @@ type Tag {
   name: String!
 
   # Optional. A description of the tag used in connection with the vignette at the top of the Tag's photo page.
-  description: String
+  description: String!
 
   # Optional. An image of the tag used in connection with the vignette at the top of the Tag's photos page.
   coverImage: Image
@@ -164,7 +168,7 @@ type Finish {
   name: String!
 
   # Optional. A description of the tag used in connection with the vignette for the finish.
-  description: String!
+  description: String
 
   # Optional. An image of the finish.
   coverImage: Image
@@ -241,8 +245,25 @@ type User {
   updatedAt: DateTime!
 }
 
+type SuccessMessageResponse {
+  success: Boolean!
+  message: String!
+}
+
 type SearchCollectionsResponse {
   datalist: [Collection!]!
+}
+
+type AddCollectionResponse {
+  success: Boolean!
+  message: String!
+  newCollection: Collection
+}
+
+type UpdateCollectionResponse {
+  success: Boolean!
+  message: String!
+  updatedCollection: Collection
 }
 
 type PaginatedResponse {
@@ -266,12 +287,42 @@ type PaginatedPhotosWithFinishResponse {
   finishInfo: Finish!
 }
 
+type AddFinishResponse {
+  success: Boolean!
+  message: String!
+  newFinish: Finish
+}
+
+type UpdateFinishResponse {
+  success: Boolean!
+  message: String!
+  updatedFinish: Finish
+}
+
+type AddImageResponse {
+  success: Boolean!
+  message: String!
+  newImage: Image
+}
+
+type UpdateImageResponse {
+  success: Boolean!
+  message: String!
+  updatedImage: Image
+}
+
 type SearchLocationsResponse {
   datalist: [Location!]!
 }
 
 type LocationsResponse {
   locations: [Location!]!
+}
+
+type AllPhotosAtLocationResponse {
+  locationInfo: Location!
+  total: Int!
+  photos: [Photo!]!
 }
 
 type GroupedPhotosAtLocationResponse {
@@ -283,6 +334,18 @@ type PaginatedPhotosAtLocationResponse {
   photos: [Photo!]!
   pageInfo: PaginatedResponse!
   locationInfo: Location!
+}
+
+type AddLocationResponse {
+  success: Boolean!
+  message: String!
+  newLocation: Location
+}
+
+type UpdateLocationResponse {
+  success: Boolean!
+  message: String!
+  updatedLocation: Location
 }
 
 type ItemCountList {
@@ -302,6 +365,12 @@ type PhotographersResponse {
   photographers: [Photographer!]!
 }
 
+type AllPhotosByPhotographerResponse {
+  photographerInfo: Photographer!
+  total: Int!
+  photos: [Photo!]!
+}
+
 type GroupedPhotosByPhotographerResponse {
   photos: [Photo!]!
   photographerInfo: Photographer!
@@ -313,6 +382,18 @@ type PaginatedPhotosByPhotographerResponse {
   photographerInfo: Photographer!
 }
 
+type AddPhotographerResponse {
+  success: Boolean!
+  message: String!
+  newPhotographer: Photographer
+}
+
+type UpdatePhotographerResponse {
+  success: Boolean!
+  message: String!
+  updatedPhotographer: Photographer
+}
+
 type SelectionOption {
   id: Int!
   name: String!
@@ -320,12 +401,6 @@ type SelectionOption {
 
 type PhotosResponse {
   photos: [Photo!]!
-}
-
-type UpdatePhotoResponse {
-  success: Boolean!
-  message: String!
-  photo: Photo
 }
 
 type PhotographerSelectionOption {
@@ -381,12 +456,35 @@ type PaginatedFeaturedPhotosResponse {
   pageInfo: PaginatedResponse!
 }
 
+type AddPhotoResponse {
+  success: Boolean!
+  message: String!
+  newPhoto: Photo
+}
+
+type UpdatePhotoResponse {
+  success: Boolean!
+  message: String!
+  updatedPhoto: Photo
+}
+
+type AllFeaturedPhotosResponse {
+  total: Int!
+  photos: [Photo!]!
+}
+
 type SubjectsResponse {
   subjects: [Subject!]!
 }
 
 type SearchSubjectsResponse {
   datalist: [Subject!]!
+}
+
+type AllPhotosOfSubjectResponse {
+  subjectInfo: Subject!
+  total: Int!
+  photos: [Photo!]!
 }
 
 type GroupedPhotosOfSubjectResponse {
@@ -400,13 +498,26 @@ type PaginatedPhotosOfSubjectResponse {
   subjectInfo: Subject!
 }
 
-type SuccessMessageResponse {
+type AddSubjectResponse {
   success: Boolean!
   message: String!
+  newSubject: Subject
+}
+
+type UpdateSubjectResponse {
+  success: Boolean!
+  message: String!
+  updatedSubject: Subject
 }
 
 type SearchTagsResponse {
   datalist: [Tag!]!
+}
+
+type AllPhotosWithTagResponse {
+  tagInfo: Tag!
+  total: Int!
+  photos: [Photo!]!
 }
 
 type GroupedPhotosWithTagResponse {
@@ -418,6 +529,18 @@ type PaginatedPhotosWithTagResponse {
   photos: [Photo!]!
   pageInfo: PaginatedResponse!
   tagInfo: Tag!
+}
+
+type AddTagResponse {
+  success: Boolean!
+  message: String!
+  newTag: Tag
+}
+
+type UpdateTagResponse {
+  success: Boolean!
+  message: String!
+  updatedTag: Tag
 }
 
 type FavoritesResponse {
@@ -459,23 +582,39 @@ type UserPreferencesResponse {
   shoppingBagItems: [UserShoppingBagItem!]
 }
 
-input CollectionInput {
+# Inputs to create a new Collection.
+input AddCollectionInput {
+  # Name of the collection. Used in Photo Info links.
   name: String!
   tag: String!
+
+  # A vignette used to introduce the subject.
   description: String!
+
+  # A cover image to be displayed next to the opening vignette.
+  coverImageId: Int
 }
 
-input CollectionUpdateInput {
+# Optional inputs to be used to update the Collection Info.
+input UpdateCollectionInput {
+  # Optional. Name of the collection. Used in Photo Info links.
   name: String
+
+  # An optional tag for the collection.
   tag: String
+
+  # Optional. A vignette used to introduce the subject.
   description: String
+
+  # Optional. A cover image to be displayed next to the opening vignette.
+  coverImageId: Float
 }
 
 input SearchCollectionsInput {
   searchString: String!
 }
 
-input FinishInput {
+input AddFinishInput {
   name: String!
   description: String!
   coverImageId: Float
@@ -489,7 +628,7 @@ input FinishInput {
   priceModifier: Float!
 }
 
-input FinishUpdateInput {
+input UpdateFinishInput {
   name: String
   description: String
   coverImageId: Float
@@ -519,18 +658,18 @@ input PaginatedPhotosWithFinishInput {
   take: Int!
 }
 
-input ImageInput {
-  imageName: String!
-  fileExtension: String!
-  imageUrl: String!
-  altText: String!
-  size: String!
-  width: Int!
-  height: Int!
+input AddImageInput {
+  imageName: String = "New Image"
+  fileExtension: String = "XL"
+  imageUrl: String = ""
+  altText: String = "new image"
+  size: String = "XL"
+  width: Int = 0
+  height: Int = 0
   photoId: Float
 }
 
-input ImageUpdateInput {
+input UpdateImageInput {
   imageName: String
   fileExtension: String
   imageUrl: String
@@ -542,7 +681,7 @@ input ImageUpdateInput {
 }
 
 # Inputs to create a new Location entity.
-input LocationInput {
+input AddLocationInput {
   # Name of the location.
   name: String!
 
@@ -550,14 +689,14 @@ input LocationInput {
   tag: String!
 
   # Vignette describing the location.
-  description: String
+  description: String!
 
-  # Map of the location. Used at the top of the Location's Photo Gallery. Used to look up the Map and add it to the One-to-One relationship.
-  coverImageId: Float
+  # id for cover image.
+  coverImageId: Int
 }
 
 # Optional inputs to be used to update the Location Info.
-input LocationUpdateInput {
+input UpdateLocationInput {
   # Optional. Name of the Location.
   name: String
 
@@ -587,6 +726,11 @@ enum SortDirection {
   DESC
 }
 
+input AllPhotosAtLocationInput {
+  name: String
+  id: Float
+}
+
 input GroupedPhotosAtLocationInput {
   name: String
   id: Float
@@ -610,7 +754,7 @@ input PhotoFinishInput {
 }
 
 # Inputs to create a new Photographer entity.
-input PhotographerInput {
+input AddPhotographerInput {
   # Photographer's full name.
   name: String!
 
@@ -626,12 +770,12 @@ input PhotographerInput {
   # Short biography for Photographer. Displayed at the top of the Photographer's photo gallery.
   bio: String!
 
-  # ID of the image for the Photographer's portrait.
-  coverImageId: Float
+  # id for cover image.
+  coverImageId: Int
 }
 
 # Inputs to update a Photographer entity.
-input PhotographerUpdateInput {
+input UpdatePhotographerInput {
   # Optional: Photographer's full name.
   name: String
 
@@ -647,12 +791,17 @@ input PhotographerUpdateInput {
   # Optional: Short biography for Photographer. Displayed at the top of the Photographer's photo gallery.
   bio: String
 
-  # Inputs to update a Photographer entity.
-  coverImageId: Float
+  # id for cover image.
+  coverImageId: Int
 }
 
 input SearchPhotographersInput {
   searchString: String!
+}
+
+input AllPhotosByPhotographerInput {
+  id: Float
+  name: String
 }
 
 input GroupedPhotosByPhotographerInput {
@@ -667,7 +816,7 @@ input PaginatedPhotosByPhotographerInput {
   take: Int!
 }
 
-input PhotoInput {
+input AddPhotoInput {
   title: String = "Untitled"
   description: String = "No description provided."
   isFeatured: Boolean = false
@@ -677,10 +826,14 @@ input PhotoInput {
   priceModifier: Float = 0
   photographerId: Int
   locationId: Int
+  subjectIds: [Int!]
+  tagIds: [Int!]
+  collectionIds: [Int!]
+  finishIds: [Int!]
   imageId: Int
 }
 
-input PhotoUpdateInput {
+input UpdatePhotoInput {
   title: String
   description: String
   isDiscontinued: Boolean
@@ -689,8 +842,9 @@ input PhotoUpdateInput {
   rating: Int
   basePrice: Float
   priceModifier: Float
-  photographerId: Float
-  locationId: Float
+  imageId: Int
+  photographerId: Int
+  locationId: Int
   subjectIds: [Int!]
   tagIds: [Int!]
   collectionIds: [Int!]
@@ -713,7 +867,7 @@ input PaginatedPhotosInput {
 }
 
 # Inputs to create a new Subject entity.
-input SubjectInput {
+input AddSubjectInput {
   # Name of the subject. Used in Photo Info links.
   name: String!
 
@@ -721,11 +875,11 @@ input SubjectInput {
   description: String
 
   # A cover image to be displayed next to the opening vignette.
-  coverImageId: Float
+  coverImageId: Int
 }
 
 # Optional inputs to be used to update the Subject Info.
-input SubjectUpdateInput {
+input UpdateSubjectInput {
   # Optional. Name of the subject. Used in Photo Info links.
   name: String
 
@@ -746,6 +900,10 @@ input SearchSubjectsInput {
   searchString: String!
 }
 
+input AllPhotosOfSubjectInput {
+  name: String!
+}
+
 input GroupedPhotosOfSubjectInput {
   id: Float
   name: String
@@ -758,20 +916,37 @@ input PaginatedPhotosOfSubjectInput {
   take: Int!
 }
 
-input TagInput {
+# Inputs to create a new Tag entity.
+input AddTagInput {
+  # Name of the tag. Used in Photo Info links.
   name: String!
-  description: String
-  coverImageId: Float
+
+  # A vignette used to introduce the tag.
+  description: String!
+
+  # A cover image to be displayed nest to the opening vignette.
+  coverImageId: Int
 }
 
-input TagUpdateInput {
+# Optional inputs to be used to update the Tag Info.
+input UpdateTagInput {
+  # Optional. Name of the tag. Used in Photo Info links.
   name: String
+
+  # Optional. A vignette used to introduce the subject.
   description: String
+
+  # Optional. A cover image to be displayed next to the opening vignette.
   coverImageId: Float
 }
 
 input SearchTagsInput {
   searchString: String!
+}
+
+input AllPhotosWithTagInput {
+  id: Float
+  name: String
 }
 
 input GroupedPhotosWithTagInput {
@@ -819,6 +994,7 @@ type Query {
   locationWithName(name: String!): Location
   groupedPhotosAtLocation(input: GroupedPhotosAtLocationInput!): GroupedPhotosAtLocationResponse!
   paginatedPhotosAtLocation(input: PaginatedPhotosAtLocationInput!): PaginatedPhotosAtLocationResponse!
+  allPhotosAtLocation(input: AllPhotosAtLocationInput!): AllPhotosAtLocationResponse!
   photoCountBySubject: ItemCountList!
   photoCountByTag: ItemCountList!
   photoCountByCollection: ItemCountList!
@@ -838,14 +1014,16 @@ type Query {
   photographerWithName(name: String!): Photographer
   groupedPhotosByPhotographer(input: GroupedPhotosByPhotographerInput!): GroupedPhotosByPhotographerResponse!
   paginatedPhotosByPhotographer(input: PaginatedPhotosByPhotographerInput!): PaginatedPhotosByPhotographerResponse!
+  allPhotosByPhotographer(input: AllPhotosByPhotographerInput!): AllPhotosByPhotographerResponse!
 
   # Returns all Photos + all relations. Sortable and filterable.
   photos(input: PhotoSearchSortInput!): PhotosResponse!
 
-  # Returns all Photos + all relations. Sortable and filterable.
+  # Returns all Photos + all relations. Searchable.
   searchPhotos(input: SearchPhotosInput!): SearchPhotosResponse!
   paginatedPhotos(input: PaginatedPhotosInput!): PaginatedAllPhotosResponse!
   paginatedFeaturedPhotos(input: PaginatedPhotosInput!): PaginatedFeaturedPhotosResponse!
+  allFeaturedPhotos: AllFeaturedPhotosResponse!
   photo(id: Int!): Photo
   photoWithSku(sku: Int!): Photo!
   photoEditOptions: PhotoEditSelectionOptions!
@@ -860,6 +1038,7 @@ type Query {
   subjectWithName(name: String!): Subject
   groupedPhotosOfSubject(input: GroupedPhotosOfSubjectInput!): GroupedPhotosOfSubjectResponse!
   paginatedPhotosOfSubject(input: PaginatedPhotosOfSubjectInput!): PaginatedPhotosOfSubjectResponse!
+  allPhotosOfSubject(input: AllPhotosOfSubjectInput!): AllPhotosOfSubjectResponse!
 
   # Search tags. Returns tag + Cover Image.
   searchTags(input: SearchTagsInput!): SearchTagsResponse!
@@ -867,6 +1046,7 @@ type Query {
   tagWithName(name: String!): Tag
   groupedPhotosWithTag(input: GroupedPhotosWithTagInput!): GroupedPhotosWithTagResponse!
   paginatedPhotosWithTag(input: PaginatedPhotosWithTagInput!): PaginatedPhotosWithTagResponse!
+  allPhotosWithTag(input: AllPhotosWithTagInput!): AllPhotosWithTagResponse!
 
   # Returns all Photos favorited by the signed in User.
   favorites: FavoritesResponse!
@@ -883,36 +1063,36 @@ type Query {
 union UserSearchResult = Subject | Tag | Location
 
 type Mutation {
-  addCollection(input: CollectionInput!): Collection!
-  updateCollection(input: CollectionUpdateInput!, id: Int!): Collection!
+  addCollection(input: AddCollectionInput!): AddCollectionResponse!
+  updateCollection(input: UpdateCollectionInput!, id: Int!): UpdateCollectionResponse!
   deleteCollection(id: Int!): Boolean!
-  addFinish(input: FinishInput!): Finish!
-  updateFinish(input: FinishUpdateInput!, id: Int!): Finish
+  addFinish(input: AddFinishInput!): AddFinishResponse!
+  updateFinish(input: UpdateFinishInput!, id: Int!): UpdateFinishResponse!
   deleteFinish(id: Int!): Boolean!
-  addImage(input: ImageInput!): Image!
-  updateImage(input: ImageUpdateInput!, id: Int!): Image!
+  addImage(input: AddImageInput!): AddImageResponse!
+  updateImage(input: UpdateImageInput!, id: Int!): UpdateImageResponse!
   deleteImage(id: Int!): Boolean!
   addImageToPhoto(imageId: Int!, photoId: Int!): Image!
-  addLocation(input: LocationInput!): Location!
-  updateLocation(input: LocationUpdateInput!, id: Int!): Location
+  addLocation(input: AddLocationInput!): AddLocationResponse!
+  updateLocation(input: UpdateLocationInput!, id: Int!): UpdateLocationResponse!
   deleteLocation(id: Int!): Boolean!
   addPhotoToCollection(input: PhotoCollectionInput!): Boolean!
   removePhotoFromCollection(input: PhotoCollectionInput!): Boolean!
   addFinishToPhoto(input: PhotoFinishInput!): Boolean!
   removeFinishFromPhoto(input: PhotoFinishInput!): Boolean!
-  addPhotographer(input: PhotographerInput!): Photographer!
-  updatePhotographer(input: PhotographerUpdateInput!, id: Int!): Photographer
+  addPhotographer(input: AddPhotographerInput!): AddPhotographerResponse!
+  updatePhotographer(input: UpdatePhotographerInput!, id: Int!): UpdatePhotographerResponse!
   deletePhotographer(id: Int!): Boolean!
-  addPhoto(input: PhotoInput!): Photo!
-  updatePhoto(input: PhotoUpdateInput!, id: Int!): UpdatePhotoResponse!
+  addPhoto(input: AddPhotoInput!): AddPhotoResponse!
+  updatePhoto(input: UpdatePhotoInput!, id: Int!): UpdatePhotoResponse!
   deletePhoto(id: Int!): Boolean!
-  addSubject(input: SubjectInput!): Subject!
-  updateSubject(input: SubjectUpdateInput!, id: Int!): Subject!
+  addSubject(input: AddSubjectInput!): AddSubjectResponse!
+  updateSubject(input: UpdateSubjectInput!, id: Int!): UpdateSubjectResponse!
   deleteSubject(id: Int!): Boolean!
   subscribeToNewsletter: SuccessMessageResponse!
   unsubscribeFromNewsletter: SuccessMessageResponse!
-  addTag(input: TagInput!): Tag!
-  updateTag(input: TagUpdateInput!, id: Int!): Tag!
+  addTag(input: AddTagInput!): AddTagResponse!
+  updateTag(input: UpdateTagInput!, id: Int!): UpdateTagResponse!
   deleteTag(id: Int!): Boolean!
   addPhotoToFavorites(photoId: Float!): AddPhotoToFavoritesResponse!
   removePhotoFromFavorites(photoId: Float!): RemovePhotoFromFavoritesResponse!

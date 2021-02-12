@@ -20,22 +20,27 @@ import Image from "../entities/Image";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import GroupedResponse from "../abstract/GroupedResponse";
 import { SortDirection } from "../abstract/Enum";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
-@InputType({ description: "Inputs to create a new Subject entity." })
-class SubjectInput {
-  @Field({ description: "Name of the subject. Used in Photo Info links." })
+@InputType({
+  description: "Inputs to create a new Subject entity.",
+})
+class AddSubjectInput {
+  @Field({
+    description: "Name of the subject. Used in Photo Info links.",
+  })
   name: string;
 
   @Field({
-    description: "A vignette used to introduce the subject.",
     nullable: true,
+    description: "A vignette used to introduce the subject.",
   })
   description?: string;
 
-  @Field({
-    description: "A cover image to be displayed next to the opening vignette.",
+  @Field(() => Int, {
     nullable: true,
+    description: "A cover image to be displayed next to the opening vignette.",
   })
   coverImageId?: number;
 }
@@ -43,7 +48,7 @@ class SubjectInput {
 @InputType({
   description: "Optional inputs to be used to update the Subject Info.",
 })
-class SubjectUpdateInput {
+class UpdateSubjectInput {
   @Field({
     nullable: true,
     description: "Optional. Name of the subject. Used in Photo Info links.",
@@ -97,6 +102,25 @@ class SearchSubjectsResponse {
   datalist: Subject[];
 }
 
+// * ALL
+@InputType()
+class AllPhotosOfSubjectInput {
+  @Field()
+  name: string;
+}
+
+@ObjectType()
+class AllPhotosOfSubjectResponse {
+  @Field(() => Subject)
+  subjectInfo: Subject;
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
+}
+
 // * GROUPED
 @InputType()
 class GroupedPhotosOfSubjectInput {
@@ -133,6 +157,18 @@ class PaginatedPhotosOfSubjectInput {
 class PaginatedPhotosOfSubjectResponse extends PaginatedPhotosResponse() {
   @Field(() => Subject)
   subjectInfo: Subject;
+}
+
+@ObjectType()
+class AddSubjectResponse extends SuccessMessageResponse {
+  @Field(() => Subject, { nullable: true })
+  newSubject?: Subject;
+}
+
+@ObjectType()
+class UpdateSubjectResponse extends SuccessMessageResponse {
+  @Field(() => Subject, { nullable: true })
+  updatedSubject?: Subject;
 }
 
 @Resolver(() => Subject)
@@ -175,15 +211,6 @@ export default class SubjectResolver {
     const response = { subjects: sbj };
     return response;
   }
-
-  // @Query(() => [Subject], {
-  //   description: "Returns all subjects + cover images only.",
-  // })
-  // async subjects(): Promise<Subject[]> {
-  //   return await this.subjectRepository.find({
-  //     relations: ["coverImage"],
-  //   });
-  // }
 
   @Query(() => SearchSubjectsResponse, {
     description: "Search subjects. Returns Subjects + Cover Image.",
@@ -356,35 +383,108 @@ export default class SubjectResolver {
     };
   }
 
+  // * Queries - ALL Photos of Subject
+  @Query(() => AllPhotosOfSubjectResponse)
+  async allPhotosOfSubject(
+    @Arg("input", () => AllPhotosOfSubjectInput)
+    input: AllPhotosOfSubjectInput
+  ): Promise<AllPhotosOfSubjectResponse | undefined> {
+    /**
+     * 1. query subject
+     * 2. query photoIds = photosOfSubject.photoId
+     * 3. query photoRepository where p.id IN photoIds
+     */
+
+    console.log(`***request for all photos of subject---${input.name}***`);
+    const subjectInfo = await this.subjectRepository
+      .createQueryBuilder("s")
+      .where("s.name ilike :name", { name: `%${input.name}%` })
+      .getOne();
+
+    if (!subjectInfo) {
+      return undefined;
+    }
+
+    const photosOfSubject = await this.photoSubjectRepository.find({
+      where: { subjectId: subjectInfo.id },
+    });
+    const photoIds = photosOfSubject.map((ps) => ps.photoId);
+
+    const total = photoIds.length;
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    console.log(`Returning ${photos.length} of ${total} photos`);
+
+    return {
+      subjectInfo,
+      total,
+      photos,
+    };
+  }
+
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Subject)
+  @Mutation(() => AddSubjectResponse)
   async addSubject(
-    @Arg("input", () => SubjectInput) input: SubjectInput
-  ): Promise<Subject> {
-    return await this.subjectRepository.create({ ...input }).save();
+    @Arg("input", () => AddSubjectInput) input: AddSubjectInput
+  ): Promise<AddSubjectResponse> {
+    const newSubject = await this.subjectRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newSubject.coverImage = coverImage;
+    }
+    await this.subjectRepository.insert(newSubject);
+    await this.subjectRepository.save(newSubject);
+
+    return {
+      success: true,
+      message: `Successfully created new Subject: ${input.name}`,
+      newSubject: newSubject,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Subject)
+  @Mutation(() => UpdateSubjectResponse)
   async updateSubject(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => SubjectUpdateInput) input: SubjectUpdateInput
-  ): Promise<Subject | undefined> {
+    @Arg("input", () => UpdateSubjectInput) input: UpdateSubjectInput
+  ): Promise<UpdateSubjectResponse> {
     const subject = await this.subjectRepository.findOne(id);
     if (!subject) {
-      throw new Error(`No subject with an id of ${id} exists.`);
+      return {
+        success: false,
+        message: `Couldn't find subject with id: ${id}`,
+      };
     }
-    if (input.coverImageId && subject) {
-      const image = await this.imageRepository.findOne(input.coverImageId);
-      subject.coverImage = image;
-      await this.subjectRepository.save(subject);
-      delete input.coverImageId;
-    }
-    const updatedSubject = { ...subject, ...input };
-    const s = await this.subjectRepository.save(updatedSubject);
 
-    return s;
+    const updatedSubject = { ...subject, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedSubject.coverImage = coverImage;
+    }
+    const sbj = await this.subjectRepository.save(updatedSubject);
+
+    return {
+      success: true,
+      message: `Successfully updated ${sbj.name}`,
+      updatedSubject: sbj,
+    };
   }
 
   @Authorized("ADMIN")

@@ -7,34 +7,36 @@ import {
   Arg,
   Authorized,
   Mutation,
+  ObjectType,
 } from "type-graphql";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Image from "../entities/Image";
 import Photo from "../entities/Photo";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 // * Input Types
 @InputType()
-class ImageInput {
-  @Field()
+class AddImageInput {
+  @Field({ nullable: true, defaultValue: "New Image" })
   imageName: string;
 
-  @Field()
+  @Field({ nullable: true, defaultValue: "XL" })
   fileExtension: string;
 
-  @Field()
+  @Field({ nullable: true, defaultValue: "" })
   imageUrl: string;
 
-  @Field()
+  @Field({ nullable: true, defaultValue: "new image" })
   altText: string;
 
-  @Field()
+  @Field({ nullable: true, defaultValue: "XL" })
   size: string;
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true, defaultValue: 0 })
   width: number;
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true, defaultValue: 0 })
   height: number;
 
   @Field({ nullable: true })
@@ -42,7 +44,7 @@ class ImageInput {
 }
 
 @InputType()
-class ImageUpdateInput {
+class UpdateImageInput {
   @Field({ nullable: true })
   imageName?: string;
 
@@ -66,6 +68,18 @@ class ImageUpdateInput {
 
   @Field({ nullable: true })
   photoId?: number;
+}
+
+@ObjectType()
+class AddImageResponse extends SuccessMessageResponse {
+  @Field(() => Image, { nullable: true })
+  newImage?: Image;
+}
+
+@ObjectType()
+class UpdateImageResponse extends SuccessMessageResponse {
+  @Field(() => Image, { nullable: true })
+  updatedImage?: Image;
 }
 
 @Resolver(() => Image)
@@ -95,32 +109,76 @@ export default class ImageResolver {
 
   // * Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Image)
+  @Mutation(() => AddImageResponse)
   async addImage(
-    @Arg("input", () => ImageInput) input: ImageInput
-  ): Promise<Image | undefined> {
+    @Arg("input", () => AddImageInput) input: AddImageInput
+  ): Promise<AddImageResponse> {
     const newImage = await this.imageRepository.create({ ...input });
+    await this.imageRepository.insert(newImage);
     await this.imageRepository.save(newImage);
-    return newImage;
+    return {
+      success: true,
+      message: `Created new image with id: ${newImage.id}`,
+      newImage: newImage,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Image)
+  @Mutation(() => UpdateImageResponse)
   async updateImage(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => ImageUpdateInput) input: ImageUpdateInput
-  ): Promise<Image | undefined> {
-    const image = await this.imageRepository.findOne({ id });
+    @Arg("input", () => UpdateImageInput) input: UpdateImageInput
+  ): Promise<UpdateImageResponse> {
+    let image = await this.imageRepository.findOne({ id });
 
-    if (image) {
-      const updatedImage = {
-        ...image,
-        ...input,
+    if (!image) {
+      return {
+        success: false,
+        message: `Failed to find image with id ${id}`,
       };
-      return await this.imageRepository.save(updatedImage);
-    } else {
-      return undefined;
     }
+
+    if (input.photoId) {
+      const photo = await this.photoRepository.findOne(input.photoId, {
+        relations: ["images"],
+      });
+
+      if (!photo) {
+        return {
+          success: false,
+          message: `Photo ${input.photoId} not found.`,
+        };
+      }
+
+      photo.images.length = 0;
+
+      photo.images.push(image);
+      await this.photoRepository.save(photo);
+
+      console.log(JSON.stringify(photo, null, 2));
+
+      image.photo = photo;
+      delete input.photoId;
+    }
+
+    console.log(`input: ${JSON.stringify(input, null, 2)}`);
+    // image.imageName = input.imageName || image.imageName;
+    // image.fileExtension = input.fileExtension || image.fileExtension;
+    // image.imageUrl = input.imageUrl || image.imageUrl;
+    // image.altText = input.altText || image.altText;
+    // image.size = input.size || image.size;
+    // image.height = input.height || image.height;
+    // image.width = input.width || image.width;
+
+    image = Object.assign(image, input);
+
+    await this.imageRepository.save(image);
+
+    return {
+      success: true,
+      message: `Successfully updated image ${id}`,
+      updatedImage: image,
+    };
   }
 
   @Authorized("ADMIN")

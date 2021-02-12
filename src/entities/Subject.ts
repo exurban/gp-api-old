@@ -20,9 +20,9 @@ export default class Subject extends BaseEntity {
   @Index()
   @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  readonly id: number;
 
-  @Index()
+  @Index({ unique: true })
   @Field()
   @Column({ unique: true })
   name: string;
@@ -36,7 +36,7 @@ export default class Subject extends BaseEntity {
     description:
       "Optional. An image of the subject used in connection with the vignette at the top of the Subject's photos page.",
   })
-  @OneToOne(() => Image)
+  @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   coverImage?: Image;
 

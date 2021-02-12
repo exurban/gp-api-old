@@ -29,9 +29,10 @@ import PhotoFinish from "./PhotoFinish";
 @ObjectType()
 @Entity({ name: "photos" })
 export default class Photo extends BaseEntity {
+  @Index()
   @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  readonly id: number;
 
   @Field(() => Int)
   @Column({ type: "int" })
@@ -93,7 +94,7 @@ export default class Photo extends BaseEntity {
   @Field(() => Location, { nullable: true })
   @ManyToOne(() => Location, (location) => location.photos, { nullable: true })
   @JoinColumn()
-  location: Location;
+  location?: Location;
 
   @Field(() => [Image])
   @OneToMany(() => Image, (img) => img.photo, { cascade: true })
@@ -149,7 +150,6 @@ export default class Photo extends BaseEntity {
   @AfterInsert()
   setSortIndex() {
     const siString = "5" + (this.skuGenerator + 1000).toString();
-    console.log(`Sort Index: ${siString}`);
     this.sortIndex = parseInt(siString);
   }
 }

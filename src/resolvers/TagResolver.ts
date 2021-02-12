@@ -19,28 +19,50 @@ import Photo from "../entities/Photo";
 import Image from "../entities/Image";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import GroupedResponse from "../abstract/GroupedResponse";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
-@InputType()
-class TagInput {
-  @Field()
+@InputType({
+  description: "Inputs to create a new Tag entity.",
+})
+class AddTagInput {
+  @Field({
+    description: "Name of the tag. Used in Photo Info links.",
+  })
   name: string;
 
-  @Field({ nullable: true })
-  description?: string;
+  @Field({
+    description: "A vignette used to introduce the tag.",
+  })
+  description: string;
 
-  @Field({ nullable: true })
+  @Field(() => Int, {
+    nullable: true,
+    description: "A cover image to be displayed nest to the opening vignette.",
+  })
   coverImageId?: number;
 }
 
-@InputType()
-class TagUpdateInput {
-  @Field({ nullable: true })
+@InputType({
+  description: "Optional inputs to be used to update the Tag Info.",
+})
+class UpdateTagInput {
+  @Field({
+    nullable: true,
+    description: "Optional. Name of the tag. Used in Photo Info links.",
+  })
   name?: string;
 
-  @Field({ nullable: true })
+  @Field({
+    nullable: true,
+    description: "Optional. A vignette used to introduce the subject.",
+  })
   description?: string;
 
-  @Field({ nullable: true })
+  @Field({
+    nullable: true,
+    description:
+      "Optional. A cover image to be displayed next to the opening vignette.",
+  })
   coverImageId?: number;
 }
 
@@ -54,6 +76,28 @@ class SearchTagsInput {
 class SearchTagsResponse {
   @Field(() => [Tag])
   datalist: Tag[];
+}
+
+// * ALL
+@InputType()
+class AllPhotosWithTagInput {
+  @Field({ nullable: true })
+  id?: number;
+
+  @Field({ nullable: true })
+  name?: string;
+}
+
+@ObjectType()
+class AllPhotosWithTagResponse {
+  @Field(() => Tag)
+  tagInfo: Tag;
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
 }
 
 // * GROUPED
@@ -92,6 +136,18 @@ class PaginatedPhotosWithTagInput {
 class PaginatedPhotosWithTagResponse extends PaginatedPhotosResponse() {
   @Field(() => Tag)
   tagInfo: Tag;
+}
+
+@ObjectType()
+class AddTagResponse extends SuccessMessageResponse {
+  @Field(() => Tag, { nullable: true })
+  newTag?: Tag;
+}
+
+@ObjectType()
+class UpdateTagResponse extends SuccessMessageResponse {
+  @Field(() => Tag, { nullable: true })
+  updatedTag?: Tag;
 }
 
 @Resolver(() => Tag)
@@ -267,33 +323,100 @@ export default class TagResolver {
     };
   }
 
+  // * Queries - PAGINATED Photos with Tag
+  @Query(() => AllPhotosWithTagResponse)
+  async allPhotosWithTag(
+    @Arg("input", () => AllPhotosWithTagInput)
+    input: AllPhotosWithTagInput
+  ): Promise<AllPhotosWithTagResponse | undefined> {
+    const tagInfo = await this.tagRepository.findOne({
+      where: { name: input.name },
+    });
+
+    if (!tagInfo) {
+      return undefined;
+    }
+
+    const photosWithTag = await this.photoTagRepository.find({
+      where: { tagId: tagInfo.id },
+    });
+    const photoIds = photosWithTag.map((pt) => pt.photoId);
+
+    const total = photoIds.length;
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    console.log(`returning ${total} ${JSON.stringify(tagInfo, null, 2)}`);
+
+    return {
+      tagInfo,
+      total,
+      photos,
+    };
+  }
+
   // * Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Tag)
-  async addTag(@Arg("input", () => TagInput) input: TagInput): Promise<Tag> {
-    return await this.tagRepository.create({ ...input }).save();
+  @Mutation(() => AddTagResponse)
+  async addTag(
+    @Arg("input", () => AddTagInput) input: AddTagInput
+  ): Promise<AddTagResponse> {
+    const newTag = await this.tagRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newTag.coverImage = coverImage;
+    }
+    await this.tagRepository.insert(newTag);
+    await this.tagRepository.save(newTag);
+
+    return {
+      success: true,
+      message: `Successfully created new Tag: ${input.name}`,
+      newTag: newTag,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Tag)
+  @Mutation(() => UpdateTagResponse)
   async updateTag(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => TagUpdateInput) input: TagUpdateInput
-  ): Promise<Tag | undefined> {
+    @Arg("input", () => UpdateTagInput) input: UpdateTagInput
+  ): Promise<UpdateTagResponse> {
     const tag = await this.tagRepository.findOne(id);
     if (!tag) {
-      throw new Error(`No tag with an id of ${id} exists.`);
+      return {
+        success: false,
+        message: `Couldn't find tag with id: ${id}`,
+      };
     }
-    if (input.coverImageId && tag) {
-      const image = await this.imageRepository.findOne(input.coverImageId);
-      tag.coverImage = image;
-      await this.tagRepository.save(tag);
-      delete input.coverImageId;
-    }
+
     const updatedTag = { ...tag, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedTag.coverImage = coverImage;
+    }
     const t = await this.tagRepository.save(updatedTag);
 
-    return t;
+    return {
+      success: true,
+      message: `Successfully update ${t.name}`,
+      updatedTag: t,
+    };
   }
 
   @Authorized("ADMIN")

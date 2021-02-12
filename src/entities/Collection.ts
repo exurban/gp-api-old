@@ -4,23 +4,25 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import Image from "./Image";
-
 import PhotoCollection from "./PhotoCollection";
+import Image from "./Image";
 
 @ObjectType()
 @Entity({ name: "collections" })
 export default class Collection extends BaseEntity {
+  @Index()
   @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  readonly id: number;
 
+  @Index({ unique: true })
   @Field()
   @Column({ unique: true })
   name: string;
@@ -30,10 +32,14 @@ export default class Collection extends BaseEntity {
   tag: string;
 
   @Field()
-  @Column("text")
+  @Column()
   description: string;
 
-  @Field({ nullable: true })
+  @Field(() => Image, {
+    nullable: true,
+    description:
+      "Optional. An image of the tag used in connection with the vignetter at the top of the Tag's photos page.",
+  })
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   coverImage?: Image;

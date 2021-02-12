@@ -39,7 +39,7 @@ const newPhotographers: Photographer[] = [];
 interface ILocation {
   name: string;
   tag: string;
-  description?: string;
+  description: string;
   coverImage?: Image;
 }
 
@@ -136,7 +136,7 @@ const addLocations = (locations: ILocation[]): Location[] => {
     const loc = new Location();
     loc.name = l.name;
     loc.tag = l.tag;
-    loc.description = l?.description;
+    loc.description = l.description;
     loc.coverImage = l?.coverImage;
     newLocations.push(loc);
   });
@@ -396,7 +396,7 @@ const seed = async () => {
     process.exit(1);
   });
 
-  console.log(`Added Tags. Starting Locations.`);
+  console.log(`Added Tags. Starting Collections.`);
 
   // * Collections
   const newCollections = addCollections(collectionData);
@@ -406,6 +406,8 @@ const seed = async () => {
     process.exit(1);
   });
 
+  console.log(`Added Collections. Starting Finishes.`);
+
   // * Finishes
   const newFinishes = addFinishes(finishData);
 
@@ -413,6 +415,8 @@ const seed = async () => {
     console.error(e.message);
     process.exit(1);
   });
+
+  console.log(`Added Finishes. Starting Locations.`);
 
   // * Locations
   const newLocations = addLocations(locationData);

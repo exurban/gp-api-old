@@ -16,29 +16,62 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
+import Image from "../entities/Image";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
-@InputType()
-class CollectionInput {
-  @Field()
+//* Input Type
+@InputType({
+  description: "Inputs to create a new Collection.",
+})
+class AddCollectionInput {
+  @Field({
+    description: "Name of the collection. Used in Photo Info links.",
+  })
   name: string;
 
   @Field()
   tag: string;
 
-  @Field()
+  @Field({
+    description: "A vignette used to introduce the subject.",
+  })
   description: string;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: "A cover image to be displayed next to the opening vignette.",
+  })
+  coverImageId?: number;
 }
 
-@InputType()
-class CollectionUpdateInput {
-  @Field({ nullable: true })
+@InputType({
+  description: "Optional inputs to be used to update the Collection Info.",
+})
+class UpdateCollectionInput {
+  @Field({
+    nullable: true,
+    description: "Optional. Name of the collection. Used in Photo Info links.",
+  })
   name?: string;
 
-  @Field({ nullable: true })
+  @Field({
+    nullable: true,
+    description: "An optional tag for the collection.",
+  })
   tag?: string;
 
-  @Field({ nullable: true })
+  @Field({
+    nullable: true,
+    description: "Optional. A vignette used to introduce the subject.",
+  })
   description?: string;
+
+  @Field({
+    nullable: true,
+    description:
+      "Optional. A cover image to be displayed next to the opening vignette.",
+  })
+  coverImageId?: number;
 }
 
 @InputType()
@@ -53,6 +86,18 @@ class SearchCollectionsResponse {
   datalist: Collection[];
 }
 
+@ObjectType()
+class AddCollectionResponse extends SuccessMessageResponse {
+  @Field(() => Collection, { nullable: true })
+  newCollection?: Collection;
+}
+
+@ObjectType()
+class UpdateCollectionResponse extends SuccessMessageResponse {
+  @Field(() => Collection, { nullable: true })
+  updatedCollection?: Collection;
+}
+
 @Resolver(() => Collection)
 export default class CollectionResolver {
   //* Repositories
@@ -60,7 +105,8 @@ export default class CollectionResolver {
     @InjectRepository(Collection)
     private collectionRepository: Repository<Collection>,
     @InjectRepository(PhotoCollection)
-    private photoCollectionRepository: Repository<PhotoCollection>
+    private photoCollectionRepository: Repository<PhotoCollection>,
+    @InjectRepository(Image) private imageRepository: Repository<Image>
   ) {}
 
   //* Queries
@@ -164,29 +210,53 @@ export default class CollectionResolver {
 
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Collection)
+  @Mutation(() => AddCollectionResponse)
   async addCollection(
-    @Arg("input", () => CollectionInput) input: CollectionInput
-  ): Promise<Collection> {
-    return await this.collectionRepository.create(input).save();
+    @Arg("input", () => AddCollectionInput) input: AddCollectionInput
+  ): Promise<AddCollectionResponse> {
+    const newCollection = await this.collectionRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newCollection.coverImage = coverImage;
+    }
+    await this.collectionRepository.insert(newCollection);
+    await this.collectionRepository.save(newCollection);
+
+    return {
+      success: true,
+      message: `Successfully created new Collection: ${input.name}`,
+      newCollection: newCollection,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Collection)
+  @Mutation(() => UpdateCollectionResponse)
   async updateCollection(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => CollectionUpdateInput) input: CollectionUpdateInput
-  ): Promise<Collection | undefined> {
+    @Arg("input", () => UpdateCollectionInput) input: UpdateCollectionInput
+  ): Promise<UpdateCollectionResponse> {
     const collection = await this.collectionRepository.findOne(id);
     if (!collection) {
-      throw new Error(`No collection with an id of ${id} exists.`);
+      return {
+        success: false,
+        message: `Couldn't find collection with id: ${id}`,
+      };
     }
-    await this.collectionRepository.update(id, {
-      ...input,
-    });
-    const updatedCollection = await this.collectionRepository.findOne(id);
 
-    return updatedCollection;
+    const updatedCollection = { ...collection, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedCollection.coverImage = coverImage;
+    }
+    const col = await this.collectionRepository.save(updatedCollection);
+
+    return {
+      success: true,
+      message: `Successfully updated ${col.name}`,
+      updatedCollection: col,
+    };
   }
 
   // ! TO DO: check for photos in collection. if so, require that they be removed from collection before it can be deleted

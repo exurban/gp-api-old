@@ -9,13 +9,13 @@ export const authChecker: AuthChecker<Context> = (
   { context: { user } },
   roles
 ) => {
-  console.log(
-    `In authChecker ${JSON.stringify(
-      user?.roles,
-      null,
-      2
-    )} is of type ${typeof user?.roles} has length ${user?.roles.length}`
-  );
+  // console.log(
+  //   `In authChecker ${JSON.stringify(
+  //     user?.roles,
+  //     null,
+  //     2
+  //   )} is of type ${typeof user?.roles} has length ${user?.roles.length}`
+  // );
   if (roles.length === 0) {
     return user !== undefined;
   }

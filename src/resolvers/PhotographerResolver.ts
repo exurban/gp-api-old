@@ -14,16 +14,18 @@ import {
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Photographer from "../entities/Photographer";
-import Image from "../entities/Image";
+
 import Photo from "../entities/Photo";
+import Image from "../entities/Image";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import GroupedResponse from "../abstract/GroupedResponse";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
 @InputType({
   description: "Inputs to create a new Photographer entity.",
 })
-class PhotographerInput {
+class AddPhotographerInput {
   @Field({ description: "Photographer's full name." })
   name: string;
 
@@ -42,9 +44,9 @@ class PhotographerInput {
   })
   bio: string;
 
-  @Field({
+  @Field(() => Int, {
+    description: "id for cover image.",
     nullable: true,
-    description: "ID of the image for the Photographer's portrait.",
   })
   coverImageId?: number;
 }
@@ -52,7 +54,7 @@ class PhotographerInput {
 @InputType({
   description: "Inputs to update a Photographer entity.",
 })
-class PhotographerUpdateInput {
+class UpdatePhotographerInput {
   @Field({
     nullable: true,
     description: "Optional: Photographer's full name.",
@@ -81,9 +83,9 @@ class PhotographerUpdateInput {
   })
   bio?: string;
 
-  @Field({
+  @Field(() => Int, {
+    description: "id for cover image.",
     nullable: true,
-    description: "Inputs to update a Photographer entity.",
   })
   coverImageId?: number;
 }
@@ -104,6 +106,28 @@ class SearchPhotographersResponse {
 class PhotographersResponse {
   @Field(() => [Photographer])
   photographers: Photographer[];
+}
+
+// * ALL
+@InputType()
+class AllPhotosByPhotographerInput {
+  @Field({ nullable: true })
+  id?: number;
+
+  @Field({ nullable: true })
+  name?: string;
+}
+
+@ObjectType()
+class AllPhotosByPhotographerResponse {
+  @Field(() => Photographer)
+  photographerInfo: Photographer;
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
 }
 
 // * GROUPED
@@ -141,7 +165,19 @@ class PaginatedPhotosByPhotographerInput {
 @ObjectType()
 class PaginatedPhotosByPhotographerResponse extends PaginatedPhotosResponse() {
   @Field(() => Photographer)
-  photographerInfo: Photographer;
+  photographerInfo?: Photographer;
+}
+
+@ObjectType()
+class AddPhotographerResponse extends SuccessMessageResponse {
+  @Field(() => Photographer, { nullable: true })
+  newPhotographer?: Photographer;
+}
+
+@ObjectType()
+class UpdatePhotographerResponse extends SuccessMessageResponse {
+  @Field(() => Photographer, { nullable: true })
+  updatedPhotographer?: Photographer;
 }
 
 @Resolver(() => Photographer)
@@ -356,35 +392,108 @@ export default class PhotographerResolver {
     };
   }
 
+  // * Queries - ALL
+
+  @Query(() => AllPhotosByPhotographerResponse)
+  async allPhotosByPhotographer(
+    @Arg("input", () => AllPhotosByPhotographerInput)
+    input: AllPhotosByPhotographerInput
+  ): Promise<AllPhotosByPhotographerResponse | undefined> {
+    let photographerInfo;
+    if (input.id) {
+      photographerInfo = await this.photographerRepository
+        .createQueryBuilder("pg")
+        .where("pg.id = :id", { id: input.id })
+        .getOne();
+    } else if (input.name) {
+      photographerInfo = await this.photographerRepository
+        .createQueryBuilder("pg")
+        .where("pg.name ilike :name", {
+          name: `%${input.name}%`,
+        })
+        .getOne();
+    }
+
+    if (!photographerInfo) {
+      return undefined;
+    }
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.photographer.id = :photographerId", {
+        photographerId: photographerInfo.id,
+      })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    const total = photos.length;
+
+    return {
+      photographerInfo,
+      total,
+      photos,
+    };
+  }
+
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Photographer)
+  @Mutation(() => AddPhotographerResponse)
   async addPhotographer(
-    @Arg("input", () => PhotographerInput) input: PhotographerInput
-  ): Promise<Photographer> {
-    return await this.photographerRepository.create(input).save();
+    @Arg("input", () => AddPhotographerInput)
+    input: AddPhotographerInput
+  ): Promise<AddPhotographerResponse> {
+    const newPhotographer = await this.photographerRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newPhotographer.coverImage = coverImage;
+    }
+    await this.photographerRepository.insert(newPhotographer);
+    await this.photographerRepository.save(newPhotographer);
+
+    return {
+      success: true,
+      message: `Successfully created new Photographer: ${input.name}`,
+      newPhotographer: newPhotographer,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Photographer, { nullable: true })
+  @Mutation(() => UpdatePhotographerResponse)
   async updatePhotographer(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => PhotographerUpdateInput) input: PhotographerUpdateInput
-  ): Promise<Photographer | undefined> {
+    @Arg("input", () => UpdatePhotographerInput) input: UpdatePhotographerInput
+  ): Promise<UpdatePhotographerResponse> {
     const photographer = await this.photographerRepository.findOne({ id });
     if (!photographer) {
-      throw new Error(`No photographer with an id of ${id} exists.`);
+      return {
+        success: false,
+        message: `Couldn't find photographer with id: ${id}`,
+      };
     }
-    if (input.coverImageId && photographer) {
-      const image = await this.imageRepository.findOne(input.coverImageId);
-      photographer.coverImage = image;
-      await this.photographerRepository.save(photographer);
-      delete input.coverImageId;
-    }
+
     const updatedPhotographer = { ...photographer, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedPhotographer.coverImage = coverImage;
+    }
     const pg = await this.photographerRepository.save(updatedPhotographer);
 
-    return pg;
+    return {
+      success: true,
+      message: `Successfully updated ${pg.name}`,
+      updatedPhotographer: pg,
+    };
   }
 
   @Authorized("ADMIN")

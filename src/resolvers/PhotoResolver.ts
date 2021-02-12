@@ -13,6 +13,7 @@ import {
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Photo from "../entities/Photo";
+import Image from "../entities/Image";
 import Photographer from "../entities/Photographer";
 import Location from "../entities/Location";
 import Subject from "../entities/Subject";
@@ -26,10 +27,11 @@ import PhotoFinish from "../entities/PhotoFinish";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import { SortDirection } from "../abstract/Enum";
 import SelectionOption from "../abstract/SelectionOption";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
 @InputType()
-class PhotoInput {
+class AddPhotoInput {
   @Field({ nullable: true, defaultValue: "Untitled" })
   title: string;
 
@@ -57,12 +59,24 @@ class PhotoInput {
   @Field(() => Int, { nullable: true })
   locationId?: number;
 
+  @Field(() => [Int], { nullable: true })
+  subjectIds?: number[];
+
+  @Field(() => [Int], { nullable: true })
+  tagIds?: number[];
+
+  @Field(() => [Int], { nullable: true })
+  collectionIds?: number[];
+
+  @Field(() => [Int], { nullable: true })
+  finishIds?: number[];
+
   @Field(() => Int, { nullable: true })
   imageId?: number;
 }
 
 @InputType()
-class PhotoUpdateInput {
+class UpdatePhotoInput {
   @Field({ nullable: true })
   title?: string;
 
@@ -87,10 +101,13 @@ class PhotoUpdateInput {
   @Field(() => Float, { nullable: true })
   priceModifier?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
+  imageId?: number;
+
+  @Field(() => Int, { nullable: true })
   photographerId?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   locationId?: number;
 
   @Field(() => [Int], { nullable: true })
@@ -125,18 +142,6 @@ class PhotoSearchSortInput {
 class PhotosResponse {
   @Field(() => [Photo])
   photos: Photo[];
-}
-
-@ObjectType()
-class UpdatePhotoResponse {
-  @Field(() => Boolean)
-  success: boolean;
-
-  @Field(() => String)
-  message: string;
-
-  @Field(() => Photo, { nullable: true })
-  photo?: Photo;
 }
 
 @ObjectType()
@@ -205,11 +210,34 @@ class PaginatedAllPhotosResponse extends PaginatedPhotosResponse() {}
 @ObjectType()
 class PaginatedFeaturedPhotosResponse extends PaginatedPhotosResponse() {}
 
+@ObjectType()
+class AddPhotoResponse extends SuccessMessageResponse {
+  @Field(() => Photo, { nullable: true })
+  newPhoto?: Photo;
+}
+
+@ObjectType()
+class UpdatePhotoResponse extends SuccessMessageResponse {
+  @Field(() => Photo, { nullable: true })
+  updatedPhoto?: Photo;
+}
+
+// * ALL
+@ObjectType()
+class AllFeaturedPhotosResponse {
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
+}
+
 @Resolver()
 export default class PhotoResolver {
   //* Repositories
   constructor(
     @InjectRepository(Photo) private photoRepository: Repository<Photo>,
+    @InjectRepository(Image) private imageRepository: Repository<Image>,
 
     @InjectRepository(Photographer)
     private photographerRepository: Repository<Photographer>,
@@ -281,7 +309,7 @@ export default class PhotoResolver {
   }
 
   @Query(() => SearchPhotosResponse, {
-    description: "Returns all Photos + all relations. Sortable and filterable.",
+    description: "Returns all Photos + all relations. Searchable.",
   })
   async searchPhotos(
     @Arg("input", () => SearchPhotosInput) input: SearchPhotosInput
@@ -299,7 +327,13 @@ export default class PhotoResolver {
       .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
-      .where("s.name ilike :searchString", {
+      .where("p.title ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("p.description ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("s.name ilike :searchString", {
         searchString: `%${searchString}%`,
       })
       .orWhere("s.description ilike :searchString", {
@@ -341,9 +375,49 @@ export default class PhotoResolver {
       .orWhere("pg.bio ilike :searchString", {
         searchString: `%${searchString}%`,
       })
+      .orderBy("p.sku", "DESC")
       .getMany();
 
-    const response = { datalist: ps };
+    let intPs;
+
+    if (parseInt(searchString)) {
+      const searchInt = parseInt(searchString);
+
+      console.log(searchInt);
+
+      intPs = await this.photoRepository
+        .createQueryBuilder("p")
+        .leftJoinAndSelect("p.location", "l")
+        .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+        .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
+        .leftJoinAndSelect("p.tagsForPhoto", "pt")
+        .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
+        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+        .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+        .where("p.sku = :searchInt", {
+          searchInt: `${searchInt}`,
+        })
+        .orWhere("p.sortIndex = :searchInt", {
+          searchInt: `${searchInt}`,
+        })
+        .orderBy("p.sku", "DESC")
+        .getMany();
+
+      console.log(intPs);
+      ps.concat(intPs);
+    }
+
+    let allPhotos;
+
+    if (intPs) {
+      allPhotos = ps.concat(intPs);
+    } else {
+      allPhotos = ps;
+    }
+
+    const response = { datalist: allPhotos };
     return response;
   }
 
@@ -468,6 +542,34 @@ export default class PhotoResolver {
     };
   }
 
+  // * ALL FEATURED PHOTOS
+  @Query(() => AllFeaturedPhotosResponse)
+  async allFeaturedPhotos(): Promise<AllFeaturedPhotosResponse> {
+    const total = await this.photoRepository.count({
+      where: { isFeatured: true },
+    });
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+      .where("p.isFeatured = true")
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    return {
+      total,
+      photos,
+    };
+  }
+
   @Query(() => Photo, { nullable: true })
   async photo(@Arg("id", () => Int) id: number): Promise<Photo | undefined> {
     const photo = await this.photoRepository.findOne(id, {
@@ -557,32 +659,136 @@ export default class PhotoResolver {
 
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Photo)
+  @Mutation(() => AddPhotoResponse)
   async addPhoto(
-    @Arg("input", () => PhotoInput) input: PhotoInput
-  ): Promise<Photo> {
+    @Arg("input", () => AddPhotoInput) input: AddPhotoInput
+  ): Promise<AddPhotoResponse> {
     const newPhoto = this.photoRepository.create({
-      ...input,
+      title: input.title || "Untitled",
+      description: input.description || "No description provided.",
+      isFeatured: input.isFeatured || false,
+      isLimitedEdition: input.isLimitedEdition || false,
+      rating: input.rating || 5,
+      basePrice: input.basePrice || 375,
+      priceModifier: input.priceModifier || 0,
     });
+
+    newPhoto.images = [];
+
+    if (input.imageId) {
+      const img = await this.imageRepository.findOne(input.imageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find image with id ${input.imageId}`,
+        };
+      }
+      newPhoto.images.push(img);
+    } else {
+      const img = await this.imageRepository.create();
+      await this.imageRepository.insert(img);
+      await this.imageRepository.save(img);
+      newPhoto.images.push(img);
+    }
+
+    if (input.photographerId) {
+      const pg = await this.photographerRepository.findOne(
+        input.photographerId
+      );
+      newPhoto.photographer = pg;
+    }
+
+    if (input.locationId) {
+      const loc = await this.locationRepository.findOne(input.locationId);
+      newPhoto.location = loc;
+    }
+
+    // * subjects
+    if (input.subjectIds) {
+      const newPhotoSubjects: PhotoSubject[] = [];
+      for await (const subjectId of input.subjectIds) {
+        const newPhotoSubject = await this.photoSubjectRepository.create({
+          photoId: newPhoto.id,
+          subjectId: subjectId,
+        });
+        newPhotoSubjects.push(newPhotoSubject);
+      }
+
+      await this.photoSubjectRepository.save(newPhotoSubjects);
+      newPhoto.subjectsInPhoto = newPhotoSubjects;
+    }
+
+    // * tags
+    if (input.tagIds) {
+      const newPhotoTags: PhotoTag[] = [];
+      for await (const tagId of input.tagIds) {
+        const newPhotoTag = await this.photoTagRepository.create({
+          photoId: newPhoto.id,
+          tagId: tagId,
+        });
+        newPhotoTags.push(newPhotoTag);
+      }
+
+      await this.photoTagRepository.save(newPhotoTags);
+      newPhoto.tagsForPhoto = newPhotoTags;
+    }
+
+    // * collections
+    if (input.collectionIds) {
+      const newPhotoCollections: PhotoCollection[] = [];
+      for await (const collectionId of input.collectionIds) {
+        const newPhotoCollection = await this.photoCollectionRepository.create({
+          photoId: newPhoto.id,
+          collectionId: collectionId,
+        });
+        newPhotoCollections.push(newPhotoCollection);
+      }
+
+      await this.photoCollectionRepository.save(newPhotoCollections);
+      newPhoto.collectionsForPhoto = newPhotoCollections;
+    }
+
+    // * finishes
+    if (input.finishIds) {
+      const newPhotoFinishes: PhotoFinish[] = [];
+      for await (const finishId of input.finishIds) {
+        const newPhotoFinish = await this.photoFinishRepository.create({
+          photoId: newPhoto.id,
+          finishId: finishId,
+        });
+        newPhotoFinishes.push(newPhotoFinish);
+      }
+
+      await this.photoFinishRepository.save(newPhotoFinishes);
+      newPhoto.finishesForPhoto = newPhotoFinishes;
+    }
+
     await this.photoRepository.insert(newPhoto);
     await this.photoRepository.save(newPhoto);
 
-    return newPhoto;
+    const photo = await this.photoWithSku(newPhoto.sku);
+
+    return {
+      success: true,
+      message: `Successfully created new photo.`,
+      newPhoto: photo,
+    };
   }
 
   @Authorized("ADMIN")
   @Mutation(() => UpdatePhotoResponse)
   async updatePhoto(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => PhotoUpdateInput) input: PhotoUpdateInput
+    @Arg("input", () => UpdatePhotoInput) input: UpdatePhotoInput
   ): Promise<UpdatePhotoResponse> {
     let photo = await this.photoRepository.findOne(id, {
-      relations: [
-        "subjectsInPhoto",
-        "tagsForPhoto",
-        "collectionsForPhoto",
-        "finishesForPhoto",
-      ],
+      // relations: [
+      //   "images",
+      //   "subjectsInPhoto",
+      //   "tagsForPhoto",
+      //   "collectionsForPhoto",
+      //   "finishesForPhoto",
+      // ],
     });
 
     if (!photo) {
@@ -592,17 +798,8 @@ export default class PhotoResolver {
       };
     }
 
-    console.log(
-      `Saving ${photo.sku} BASE PRICE: ${photo.basePrice} => ${input.basePrice}\n modifier: ${photo.priceModifier} => ${input.priceModifier}`
-    );
-
-    console.log(
-      `Saving ${photo.sku} featured: ${photo.isFeatured} => ${input.isFeatured}\n ltd: ${photo.isLimitedEdition} => ${input.isLimitedEdition}`
-    );
-
-    photo.title = input.title != null ? input.title : photo.title;
-    photo.description =
-      input.description != null ? input.description : photo.description;
+    photo.title = input.title || photo.title;
+    photo.description = input.description || photo.description;
     photo.isFeatured =
       input.isFeatured != null ? input.isFeatured : photo.isFeatured;
     photo.isLimitedEdition =
@@ -618,6 +815,21 @@ export default class PhotoResolver {
       input.basePrice != null ? input.basePrice : photo.basePrice;
     photo.priceModifier =
       input.priceModifier != null ? input.priceModifier : photo.priceModifier;
+    photo.sortIndex = input.rating
+      ? parseInt(input.rating.toString() + photo.sku.toString())
+      : photo.sortIndex;
+
+    if (input.imageId) {
+      const img = await this.imageRepository.findOne(input.imageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find image with id ${input.imageId}`,
+        };
+      }
+
+      photo.images.push(img);
+    }
 
     if (input.photographerId) {
       const pg = await this.photographerRepository.findOne({
@@ -723,12 +935,14 @@ export default class PhotoResolver {
 
     photo = await photo.save();
 
-    console.log(`Updated photo is ${JSON.stringify(photo, null, 2)}`);
+    // console.log(`Updated photo is ${JSON.stringify(photo, null, 2)}`);
+
+    const updatedPhoto = await this.photoWithSku(photo.sku);
 
     return {
       success: true,
       message: `Successfully updated photo ${photo.sku}.`,
-      photo: photo,
+      updatedPhoto: updatedPhoto,
     };
   }
 

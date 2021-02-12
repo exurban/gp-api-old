@@ -17,10 +17,10 @@ import Image from "./Image";
 @ObjectType()
 @Entity({ name: "finishes" })
 export default class Finish extends BaseEntity {
-  @Index()
+  @Index({ unique: true })
   @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  readonly id: number;
 
   @Index()
   @Field({ description: "The name of the finish." })
@@ -28,17 +28,18 @@ export default class Finish extends BaseEntity {
   name: string;
 
   @Field({
+    nullable: true,
     description:
       "Optional. A description of the tag used in connection with the vignette for the finish.",
   })
-  @Column()
-  description: string;
+  @Column({ nullable: true })
+  description?: string;
 
   @Field(() => Image, {
     nullable: true,
     description: "Optional. An image of the finish.",
   })
-  @OneToOne(() => Image)
+  @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   coverImage?: Image;
 

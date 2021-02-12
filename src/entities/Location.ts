@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
@@ -16,6 +17,7 @@ import Image from "./Image";
 @ObjectType()
 @Entity({ name: "locations" })
 export default class Location extends BaseEntity {
+  @Index()
   @Field(() => ID, {
     description:
       "The ID of the location. It is unique, numeric and automatically-generated.",
@@ -36,19 +38,18 @@ export default class Location extends BaseEntity {
   tag: string;
 
   @Field({
-    nullable: true,
     description:
-      "Optional. A description of the location, used as a vignette at the top of the Location's photos page.",
+      "A description of the location, used as a vignette at the top of the Location's photos page.",
   })
-  @Column("text", { nullable: true })
-  description?: string;
+  @Column("text")
+  description: string;
 
   @Field(() => Image, {
+    nullable: true,
     description:
       "Optional. A map of the location used in conenction with the vignette at the top of the Location's photos page.",
-    nullable: true,
   })
-  @OneToOne(() => Image, { nullable: true, cascade: true })
+  @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   coverImage?: Image;
 

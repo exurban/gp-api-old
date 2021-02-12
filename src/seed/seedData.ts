@@ -65,7 +65,7 @@ export const imageData = [
     imageName: "sdg2",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg2xl.webp",
     altText: "sdg2",
     size: "xl",
     width: 1400,
@@ -75,7 +75,7 @@ export const imageData = [
     imageName: "sdg3",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg3xl.webp",
     altText: "sdg3",
     size: "xl",
     width: 1400,
@@ -85,7 +85,7 @@ export const imageData = [
     imageName: "sdg4",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg4xl.webp",
     altText: "sdg4",
     size: "xl",
     width: 1400,
@@ -95,7 +95,7 @@ export const imageData = [
     imageName: "sdg5",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg5xl.webp",
     altText: "sdg5",
     size: "xl",
     width: 1400,
@@ -105,7 +105,7 @@ export const imageData = [
     imageName: "sdg6",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg6xl.webp",
     altText: "sdg6",
     size: "xl",
     width: 1400,
@@ -115,7 +115,7 @@ export const imageData = [
     imageName: "sdg7",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg7xl.webp",
     altText: "sdg7",
     size: "xl",
     width: 1400,
@@ -125,7 +125,7 @@ export const imageData = [
     imageName: "sdg8",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg8xl.webp",
     altText: "sdg8",
     size: "xl",
     width: 935,
@@ -135,7 +135,7 @@ export const imageData = [
     imageName: "sdg9",
     fileExtension: ".webp",
     imageUrl:
-      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg1xl.webp",
+      "https://configcdkstack-gpbucketc7c11d3d-qtgzc43jqi2c.s3.us-east-2.amazonaws.com/sdg9xl.webp",
     altText: "sdg9",
     size: "xl",
     width: 1400,

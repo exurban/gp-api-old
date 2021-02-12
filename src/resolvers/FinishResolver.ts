@@ -20,10 +20,11 @@ import Image from "../entities/Image";
 import PhotoFinish from "../entities/PhotoFinish";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import GroupedResponse from "../abstract/GroupedResponse";
+import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
 @InputType()
-class FinishInput {
+class AddFinishInput {
   @Field()
   name: string;
 
@@ -59,7 +60,7 @@ class FinishInput {
 }
 
 @InputType()
-class FinishUpdateInput {
+class UpdateFinishInput {
   @Field({ nullable: true })
   name?: string;
 
@@ -142,6 +143,18 @@ class PaginatedPhotosWithFinishInput {
 class PaginatedPhotosWithFinishResponse extends PaginatedPhotosResponse() {
   @Field(() => Finish)
   finishInfo: Finish;
+}
+
+@ObjectType()
+class AddFinishResponse extends SuccessMessageResponse {
+  @Field(() => Finish, { nullable: true })
+  newFinish?: Finish;
+}
+
+@ObjectType()
+class UpdateFinishResponse extends SuccessMessageResponse {
+  @Field(() => Finish, { nullable: true })
+  updatedFinish?: Finish;
 }
 
 @Resolver(() => Finish)
@@ -328,33 +341,53 @@ export default class FinishResolver {
 
   //* Mutations
   @Authorized("ADMIN")
-  @Mutation(() => Finish)
+  @Mutation(() => AddFinishResponse)
   async addFinish(
-    @Arg("input", () => FinishInput) input: FinishInput
-  ): Promise<Finish> {
-    return await this.finishRepository.create({ ...input }).save();
+    @Arg("input", () => AddFinishInput) input: AddFinishInput
+  ): Promise<AddFinishResponse> {
+    const newFinish = await this.finishRepository.create(input);
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      newFinish.coverImage = coverImage;
+    }
+    await this.finishRepository.insert(newFinish);
+    await this.finishRepository.save(newFinish);
+
+    return {
+      success: true,
+      message: `Successfully created new Finish: ${input.name}`,
+      newFinish: newFinish,
+    };
   }
 
   @Authorized("ADMIN")
-  @Mutation(() => Finish, { nullable: true })
+  @Mutation(() => UpdateFinishResponse)
   async updateFinish(
     @Arg("id", () => Int) id: number,
-    @Arg("input", () => FinishUpdateInput) input: FinishUpdateInput
-  ): Promise<Finish | undefined> {
+    @Arg("input", () => UpdateFinishInput) input: UpdateFinishInput
+  ): Promise<UpdateFinishResponse> {
     const finish = await this.finishRepository.findOne({ id });
     if (!finish) {
-      throw new Error(`No finish with an id of ${id} exists.`);
+      return {
+        success: false,
+        message: `Couldn't find finish with id: ${id}`,
+      };
     }
-    if (input.coverImageId && finish) {
-      const image = await this.imageRepository.findOne(input.coverImageId);
-      finish.coverImage = image;
-      await this.finishRepository.save(finish);
-      delete input.coverImageId;
-    }
-    const updatedFinish = { ...finish, ...input };
-    const f = await this.finishRepository.save(updatedFinish);
 
-    return f;
+    const updatedFinish = { ...finish, ...input };
+    if (input.coverImageId) {
+      const imageId = input.coverImageId;
+      const coverImage = await this.imageRepository.findOne(imageId);
+      updatedFinish.coverImage = coverImage;
+    }
+    const fin = await this.finishRepository.save(updatedFinish);
+
+    return {
+      success: true,
+      message: `Successfully updated ${fin.name}`,
+      updatedFinish: fin,
+    };
   }
 
   @Authorized("ADMIN")
