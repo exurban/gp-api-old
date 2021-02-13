@@ -389,13 +389,6 @@ export default class SubjectResolver {
     @Arg("input", () => AllPhotosOfSubjectInput)
     input: AllPhotosOfSubjectInput
   ): Promise<AllPhotosOfSubjectResponse | undefined> {
-    /**
-     * 1. query subject
-     * 2. query photoIds = photosOfSubject.photoId
-     * 3. query photoRepository where p.id IN photoIds
-     */
-
-    console.log(`***request for all photos of subject---${input.name}***`);
     const subjectInfo = await this.subjectRepository
       .createQueryBuilder("s")
       .where("s.name ilike :name", { name: `%${input.name}%` })
@@ -426,8 +419,6 @@ export default class SubjectResolver {
       .where("p.id IN (:...photoIds)", { photoIds: photoIds })
       .orderBy("p.sortIndex", "DESC")
       .getMany();
-
-    console.log(`Returning ${photos.length} of ${total} photos`);
 
     return {
       subjectInfo,
