@@ -411,8 +411,6 @@ export default class LocationResolver {
       return undefined;
     }
 
-    console.log(JSON.stringify(locationInfo, null, 2));
-
     const photos = await this.photoRepository
       .createQueryBuilder("p")
       .leftJoinAndSelect("p.location", "l")
@@ -432,7 +430,6 @@ export default class LocationResolver {
 
     const total = photos.length;
 
-    console.log(`returning ${total} photos.`);
     return {
       locationInfo,
       total,

@@ -266,6 +266,12 @@ type UpdateCollectionResponse {
   updatedCollection: Collection
 }
 
+type AllPhotosInCollectionResponse {
+  collectionInfo: Collection!
+  total: Int!
+  photos: [Photo!]!
+}
+
 type PaginatedResponse {
   startCursor: Int!
   endCursor: Int!
@@ -612,6 +618,11 @@ input UpdateCollectionInput {
 
 input SearchCollectionsInput {
   searchString: String!
+}
+
+input AllPhotosInCollectionInput {
+  name: String
+  id: Float
 }
 
 input AddFinishInput {
@@ -972,6 +983,7 @@ type Query {
   collectionsWithPhotos: [Collection!]!
   collection(id: Int!): Collection!
   collectionWithPhotos(id: Int!): Collection!
+  allPhotosInCollection(input: AllPhotosInCollectionInput!): AllPhotosInCollectionResponse!
 
   # Search Finishes. Returns Finish + Cover Image.
   searchFinishes(input: SearchFinishesInput!): SearchFinishesResponse!

@@ -16,6 +16,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
+import Photo from "../entities/Photo";
 import Image from "../entities/Image";
 import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
@@ -98,6 +99,28 @@ class UpdateCollectionResponse extends SuccessMessageResponse {
   updatedCollection?: Collection;
 }
 
+// * ALL
+@InputType()
+class AllPhotosInCollectionInput {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  id?: number;
+}
+
+@ObjectType()
+class AllPhotosInCollectionResponse {
+  @Field(() => Collection)
+  collectionInfo: Collection;
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => [Photo])
+  photos: Photo[];
+}
+
 @Resolver(() => Collection)
 export default class CollectionResolver {
   //* Repositories
@@ -106,6 +129,7 @@ export default class CollectionResolver {
     private collectionRepository: Repository<Collection>,
     @InjectRepository(PhotoCollection)
     private photoCollectionRepository: Repository<PhotoCollection>,
+    @InjectRepository(Photo) private photoRepository: Repository<Photo>,
     @InjectRepository(Image) private imageRepository: Repository<Image>
   ) {}
 
@@ -206,6 +230,60 @@ export default class CollectionResolver {
         "photosInCollection.photo.collectionsForPhoto.collection",
       ],
     });
+  }
+
+  // * Queries - ALL Photos In Collection
+
+  @Query(() => AllPhotosInCollectionResponse)
+  async allPhotosInCollection(
+    @Arg("input", () => AllPhotosInCollectionInput)
+    input: AllPhotosInCollectionInput
+  ): Promise<AllPhotosInCollectionResponse | undefined> {
+    let collectionInfo;
+
+    if (input.id) {
+      collectionInfo = await this.collectionRepository
+        .createQueryBuilder("l")
+        .where("l.id = :id", { id: input.id })
+
+        .getOne();
+    } else if (input.name) {
+      collectionInfo = await this.collectionRepository
+        .createQueryBuilder("l")
+        .where("l.name ilike :name", {
+          name: `%${input.name}%`,
+        })
+        .getOne();
+    }
+
+    if (!collectionInfo) {
+      return undefined;
+    }
+
+    const photos = await this.photoRepository
+      .createQueryBuilder("p")
+      .leftJoinAndSelect("p.location", "l")
+      .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
+      .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
+      .leftJoinAndSelect("p.tagsForPhoto", "pt")
+      .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
+      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
+      .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
+      .where("p.collection.id = :collectionId", {
+        collectionId: collectionInfo.id,
+      })
+      .orderBy("p.sortIndex", "DESC")
+      .getMany();
+
+    const total = photos.length;
+
+    return {
+      collectionInfo,
+      total,
+      photos,
+    };
   }
 
   //* Mutations
