@@ -84,7 +84,7 @@ class UpdatePhotoInput {
   description?: string;
 
   @Field(() => Boolean, { nullable: true })
-  isDiscontinued?: boolean;
+  isHidden?: boolean;
 
   @Field(() => Boolean, { nullable: true })
   isFeatured?: boolean;
@@ -441,6 +441,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
+        .where("p.isHidden = false")
         .orderBy("p.sku", "ASC")
         .take(input.take)
         .getMany();
@@ -457,6 +458,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
         .where("p.sku > :cursor", { cursor: input.cursor })
+        .andWhere("p.isHidden = false")
         .orderBy("p.sku", "ASC")
         .take(input.take)
         .getMany();
@@ -506,6 +508,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
         .where("p.isFeatured = true")
+        .andWhere("p.isHidden = false")
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
         .getMany();
@@ -522,6 +525,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.collectionsForPhoto", "pc")
         .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
         .where("p.isFeatured = true")
+        .andWhere("p.isHidden = false")
         .andWhere("p.sortIndex < :cursor", { cursor: input.cursor })
         .orderBy("p.sortIndex", "DESC")
         .take(input.take)
@@ -561,6 +565,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
       .where("p.isFeatured = true")
+      .andWhere("p.isHidden = false")
       .orderBy("p.sortIndex", "DESC")
       .getMany();
 
@@ -806,10 +811,7 @@ export default class PhotoResolver {
       input.isLimitedEdition != null
         ? input.isLimitedEdition
         : photo.isLimitedEdition;
-    photo.isDiscontinued =
-      input.isDiscontinued != null
-        ? input.isDiscontinued
-        : photo.isDiscontinued;
+    photo.isHidden = input.isHidden != null ? input.isHidden : photo.isHidden;
     photo.rating = input.rating != null ? input.rating : photo.rating;
     photo.basePrice =
       input.basePrice != null ? input.basePrice : photo.basePrice;

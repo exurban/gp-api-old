@@ -207,7 +207,7 @@ type Photo {
   description: String!
   isFeatured: Boolean!
   isLimitedEdition: Boolean!
-  isDiscontinued: Boolean!
+  isHidden: Boolean!
   rating: Int!
   basePrice: Float
   priceModifier: Float
@@ -847,7 +847,7 @@ input AddPhotoInput {
 input UpdatePhotoInput {
   title: String
   description: String
-  isDiscontinued: Boolean
+  isHidden: Boolean
   isFeatured: Boolean
   isLimitedEdition: Boolean
   rating: Int

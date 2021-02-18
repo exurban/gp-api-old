@@ -68,7 +68,7 @@ export default class Photo extends BaseEntity {
 
   @Field()
   @Column("boolean", { default: false })
-  isDiscontinued: boolean;
+  isHidden: boolean;
 
   @Field(() => Int)
   @Column("int", { default: 5 })
