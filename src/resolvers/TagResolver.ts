@@ -323,7 +323,7 @@ export default class TagResolver {
     };
   }
 
-  // * Queries - PAGINATED Photos with Tag
+  // * Queries - ALL Photos with Tag
   @Query(() => AllPhotosWithTagResponse)
   async allPhotosWithTag(
     @Arg("input", () => AllPhotosWithTagInput)
@@ -356,6 +356,7 @@ export default class TagResolver {
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
       .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+      .andWhere("p.isHidden = false")
       .orderBy("p.sortIndex", "DESC")
       .getMany();
 

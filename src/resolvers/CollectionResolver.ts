@@ -274,6 +274,7 @@ export default class CollectionResolver {
       .where("p.collection.id = :collectionId", {
         collectionId: collectionInfo.id,
       })
+      .andWhere("p.isHidden = false")
       .orderBy("p.sortIndex", "DESC")
       .getMany();
 

@@ -417,6 +417,7 @@ export default class SubjectResolver {
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
       .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+      .andWhere("p.isHidden = false")
       .orderBy("p.sortIndex", "DESC")
       .getMany();
 

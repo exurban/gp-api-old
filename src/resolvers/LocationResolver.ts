@@ -425,6 +425,7 @@ export default class LocationResolver {
       .where("p.location.id = :locationId", {
         locationId: locationInfo.id,
       })
+      .andWhere("p.isHidden = false")
       .orderBy("p.sortIndex", "DESC")
       .getMany();
 
