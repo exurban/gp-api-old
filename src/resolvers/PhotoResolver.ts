@@ -73,6 +73,9 @@ class AddPhotoInput {
 
   @Field(() => Int, { nullable: true })
   imageId?: number;
+
+  @Field(() => Int, { nullable: true })
+  sharingImageId?: number;
 }
 
 @InputType()
@@ -103,6 +106,9 @@ class UpdatePhotoInput {
 
   @Field(() => Int, { nullable: true })
   imageId?: number;
+
+  @Field(() => Int, { nullable: true })
+  sharingImageId?: number;
 
   @Field(() => Int, { nullable: true })
   photographerId?: number;
@@ -280,6 +286,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.location", "l")
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.sharingImage", "si")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -320,6 +327,7 @@ export default class PhotoResolver {
       .createQueryBuilder("p")
       .leftJoinAndSelect("p.location", "l")
       .leftJoinAndSelect("p.photographer", "pg")
+      .leftJoinAndSelect("p.sharingImage", "si")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
@@ -389,6 +397,7 @@ export default class PhotoResolver {
         .createQueryBuilder("p")
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
+        .leftJoinAndSelect("p.sharingImage", "si")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
@@ -435,6 +444,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.sharingImage", "si")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -451,6 +461,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.sharingImage", "si")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -501,6 +512,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.sharingImage", "si")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -518,6 +530,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
+        .leftJoinAndSelect("p.sharingImage", "si")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -558,6 +571,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.location", "l")
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.sharingImage", "si")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -580,6 +594,7 @@ export default class PhotoResolver {
     const photo = await this.photoRepository.findOne(id, {
       relations: [
         "images",
+        "sharingImage",
         "photographer",
         "photographer.coverImage",
         "location",
@@ -606,6 +621,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.location", "l")
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
+      .leftJoinAndSelect("p.sharingImage", "si")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -694,6 +710,17 @@ export default class PhotoResolver {
       await this.imageRepository.insert(img);
       await this.imageRepository.save(img);
       newPhoto.images.push(img);
+    }
+
+    if (input.sharingImageId) {
+      const img = await this.imageRepository.findOne(input.sharingImageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find image with id ${input.sharingImageId}`,
+        };
+      }
+      newPhoto.sharingImage = img;
     }
 
     if (input.photographerId) {
@@ -831,6 +858,17 @@ export default class PhotoResolver {
       }
 
       photo.images.push(img);
+    }
+
+    if (input.sharingImageId) {
+      const img = await this.imageRepository.findOne(input.sharingImageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find image with id ${input.sharingImageId}`,
+        };
+      }
+      photo.sharingImage = img;
     }
 
     if (input.photographerId) {

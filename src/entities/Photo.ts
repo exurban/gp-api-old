@@ -14,6 +14,7 @@ import {
   AfterInsert,
   Index,
   BeforeInsert,
+  OneToOne,
 } from "typeorm";
 
 import Location from "./Location";
@@ -99,6 +100,14 @@ export default class Photo extends BaseEntity {
   @Field(() => [Image])
   @OneToMany(() => Image, (img) => img.photo, { cascade: true })
   images: Image[];
+
+  @Field(() => Image, {
+    description: "A 1,200px x 600px image for sharing.",
+    nullable: true,
+  })
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  sharingImage?: Image;
 
   @Field(() => [PhotoSubject], { nullable: true })
   @OneToMany(() => PhotoSubject, (ps) => ps.photo)

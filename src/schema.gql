@@ -214,6 +214,9 @@ type Photo {
   photographer: Photographer
   location: Location
   images: [Image!]!
+
+  # A 1,200px x 600px image for sharing.
+  sharingImage: Image
   subjectsInPhoto: [PhotoSubject!]
   tagsForPhoto: [PhotoTag!]
   collectionsForPhoto: [PhotoCollection!]
@@ -842,6 +845,7 @@ input AddPhotoInput {
   collectionIds: [Int!]
   finishIds: [Int!]
   imageId: Int
+  sharingImageId: Int
 }
 
 input UpdatePhotoInput {
@@ -854,6 +858,7 @@ input UpdatePhotoInput {
   basePrice: Float
   priceModifier: Float
   imageId: Int
+  sharingImageId: Int
   photographerId: Int
   locationId: Int
   subjectIds: [Int!]
