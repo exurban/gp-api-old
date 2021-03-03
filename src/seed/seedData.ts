@@ -181,14 +181,14 @@ export const printData = [
     name: "Exhibition Paper",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    printSku: "FAP",
+    printSku: "PAP",
     type: "paper",
     aspectRatio: "2:3",
     dimension1: 12,
     dimension2: 18,
     cost: 48.96,
     shippingCost: 2.1,
-    basePrice: 150,
+    basePrice: 50,
     priceModifier: 1,
   },
 ];

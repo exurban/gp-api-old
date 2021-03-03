@@ -163,8 +163,8 @@ const addPhotos = (args: { photosCount: number }): Photo[] => {
     newPhoto.isFeatured = faker.random.boolean();
     newPhoto.isLimitedEdition = faker.random.boolean();
     newPhoto.rating = faker.random.number({ min: 4, max: 10 });
-    newPhoto.basePrice = 375;
-    newPhoto.priceModifier = 1.0;
+    newPhoto.basePrice12 = 100;
+    newPhoto.priceModifier12 = 1.0;
     newPhoto.location = _.sample(newLocations) as Location;
     newPhoto.photographer = _.sample(newPhotographers) as Photographer;
 
