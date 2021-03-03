@@ -176,111 +176,19 @@ export const collectionData = [
   },
 ];
 
-export const finishData = [
+export const printData = [
   {
-    name: "Fine Art Print",
+    name: "Exhibition Paper",
     description:
       "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FAP",
-    width: 18,
-    height: 12,
-    depth: 1,
-    weight: 1.4,
-    shippingWeight: 2.1,
+    printSku: "FAP",
+    type: "paper",
+    aspectRatio: "2:3",
+    dimension1: 12,
+    dimension2: 18,
+    cost: 48.96,
+    shippingCost: 2.1,
     basePrice: 150,
-    priceModifier: 1,
-  },
-
-  {
-    name: "Fine Art Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FAP",
-    height: 16,
-    width: 20,
-    depth: 1,
-    weight: 2.1,
-    shippingWeight: 2.8,
-    basePrice: 250,
-    priceModifier: 1,
-  },
-  {
-    name: "Fine Art Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FAP",
-    height: 20,
-    width: 30,
-    depth: 1,
-    weight: 1.9,
-    shippingWeight: 3.1,
-    basePrice: 350,
-    priceModifier: 1,
-  },
-  {
-    name: "Fine Art Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FAP",
-    height: 30,
-    width: 40,
-    depth: 1,
-    weight: 2.9,
-    shippingWeight: 4.1,
-    basePrice: 450,
-    priceModifier: 1,
-  },
-  {
-    name: "Framed Metal Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FMP",
-    height: 12,
-    width: 18,
-    depth: 1,
-    weight: 1.4,
-    shippingWeight: 2.1,
-    basePrice: 150,
-    priceModifier: 1,
-  },
-
-  {
-    name: "Framed Metal Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FMP",
-    height: 16,
-    width: 20,
-    depth: 1,
-    weight: 2.1,
-    shippingWeight: 2.8,
-    basePrice: 250,
-    priceModifier: 1,
-  },
-  {
-    name: "Framed Metal Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FMP",
-    height: 20,
-    width: 30,
-    depth: 1,
-    weight: 1.9,
-    shippingWeight: 3.1,
-    basePrice: 350,
-    priceModifier: 1,
-  },
-  {
-    name: "Framed Metal Print",
-    description:
-      "Made with care on fine art paper using a high-resolution large format inkjet printer.",
-    finSku: "FMP",
-    height: 30,
-    width: 40,
-    depth: 1,
-    weight: 2.9,
-    shippingWeight: 4.1,
-    basePrice: 450,
     priceModifier: 1,
   },
 ];

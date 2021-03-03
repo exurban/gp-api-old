@@ -22,8 +22,7 @@ import Tag from "../entities/Tag";
 import PhotoTag from "../entities/PhotoTag";
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
-import Finish from "../entities/Finish";
-import PhotoFinish from "../entities/PhotoFinish";
+import PhotoPrint from "../entities/PhotoPrint";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import { SortDirection } from "../abstract/Enum";
 import SelectionOption from "../abstract/SelectionOption";
@@ -47,11 +46,35 @@ class AddPhotoInput {
   @Field(() => Int, { nullable: true, defaultValue: 5 })
   rating: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 375.0 })
-  basePrice: number;
+  @Field(() => Float, { nullable: true, defaultValue: 100.0 })
+  basePrice12?: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 0 })
-  priceModifier: number;
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier12?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 140.0 })
+  basePrice16?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier16?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 180.0 })
+  basePrice20?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier20?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 230.0 })
+  basePrice24?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier24?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 275.0 })
+  basePrice30?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier30?: number;
 
   @Field(() => Int, { nullable: true })
   photographerId?: number;
@@ -69,7 +92,7 @@ class AddPhotoInput {
   collectionIds?: number[];
 
   @Field(() => [Int], { nullable: true })
-  finishIds?: number[];
+  printIds?: number[];
 
   @Field(() => Int, { nullable: true })
   imageId?: number;
@@ -98,11 +121,35 @@ class UpdatePhotoInput {
   @Field(() => Int, { nullable: true })
   rating?: number;
 
-  @Field(() => Float, { nullable: true })
-  basePrice?: number;
+  @Field(() => Float, { nullable: true, defaultValue: 100.0 })
+  basePrice12?: number;
 
-  @Field(() => Float, { nullable: true })
-  priceModifier?: number;
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier12?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 140.0 })
+  basePrice16?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier16?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 180.0 })
+  basePrice20?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier20?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 230.0 })
+  basePrice24?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier24?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 275.0 })
+  basePrice30?: number;
+
+  @Field(() => Float, { nullable: true, defaultValue: 1 })
+  priceModifier30?: number;
 
   @Field(() => Int, { nullable: true })
   imageId?: number;
@@ -126,7 +173,7 @@ class UpdatePhotoInput {
   collectionIds?: number[];
 
   @Field(() => [Int], { nullable: true })
-  finishIds?: number[];
+  printIds?: number[];
 }
 
 @InputType()
@@ -166,9 +213,6 @@ class TagSelectionOption extends SelectionOption {}
 class CollectionSelectionOption extends SelectionOption {}
 
 @ObjectType()
-class FinishSelectionOption extends SelectionOption {}
-
-@ObjectType()
 class PhotoEditSelectionOptions {
   @Field(() => [PhotographerSelectionOption])
   photographers: PhotographerSelectionOption[];
@@ -184,9 +228,6 @@ class PhotoEditSelectionOptions {
 
   @Field(() => [CollectionSelectionOption])
   collections: CollectionSelectionOption[];
-
-  @Field(() => [FinishSelectionOption])
-  finishes: FinishSelectionOption[];
 }
 
 @InputType()
@@ -263,10 +304,8 @@ export default class PhotoResolver {
     @InjectRepository(PhotoCollection)
     private photoCollectionRepository: Repository<PhotoCollection>,
 
-    @InjectRepository(Finish)
-    private finishRepository: Repository<Finish>,
-    @InjectRepository(PhotoFinish)
-    private photoFinishRepository: Repository<PhotoFinish>
+    @InjectRepository(PhotoPrint)
+    private photoPrintRepository: Repository<PhotoPrint>
   ) {}
 
   // * Queries -
@@ -663,18 +702,12 @@ export default class PhotoResolver {
     });
     const collections = colls.map((c) => ({ id: c.id, name: c.name }));
 
-    const fins = await this.finishRepository.find({
-      select: ["id", "name"],
-    });
-    const finishes = fins.map((f) => ({ id: f.id, name: f.name }));
-
     return {
       photographers: photographers,
       locations: locations,
       subjects: subjects,
       tags: tags,
       collections: collections,
-      finishes: finishes,
     };
   }
 
@@ -690,8 +723,16 @@ export default class PhotoResolver {
       isFeatured: input.isFeatured || false,
       isLimitedEdition: input.isLimitedEdition || false,
       rating: input.rating || 5,
-      basePrice: input.basePrice || 375,
-      priceModifier: input.priceModifier || 0,
+      basePrice12: input.basePrice12 || 100,
+      priceModifier12: input.priceModifier12 || 1,
+      basePrice16: input.basePrice16 || 100,
+      priceModifier16: input.priceModifier16 || 1,
+      basePrice20: input.basePrice20 || 100,
+      priceModifier20: input.priceModifier20 || 1,
+      basePrice24: input.basePrice24 || 100,
+      priceModifier24: input.priceModifier24 || 1,
+      basePrice30: input.basePrice30 || 100,
+      priceModifier30: input.priceModifier30 || 1,
     });
 
     newPhoto.images = [];
@@ -780,19 +821,19 @@ export default class PhotoResolver {
       newPhoto.collectionsForPhoto = newPhotoCollections;
     }
 
-    // * finishes
-    if (input.finishIds) {
-      const newPhotoFinishes: PhotoFinish[] = [];
-      for await (const finishId of input.finishIds) {
-        const newPhotoFinish = await this.photoFinishRepository.create({
+    // * prints
+    if (input.printIds) {
+      const newPhotoPrints: PhotoPrint[] = [];
+      for await (const printId of input.printIds) {
+        const newPhotoPrint = await this.photoPrintRepository.create({
           photoId: newPhoto.id,
-          finishId: finishId,
+          printId: printId,
         });
-        newPhotoFinishes.push(newPhotoFinish);
+        newPhotoPrints.push(newPhotoPrint);
       }
 
-      await this.photoFinishRepository.save(newPhotoFinishes);
-      newPhoto.finishesForPhoto = newPhotoFinishes;
+      await this.photoPrintRepository.save(newPhotoPrints);
+      newPhoto.printsForPhoto = newPhotoPrints;
     }
 
     await this.photoRepository.insert(newPhoto);
@@ -840,10 +881,36 @@ export default class PhotoResolver {
         : photo.isLimitedEdition;
     photo.isHidden = input.isHidden != null ? input.isHidden : photo.isHidden;
     photo.rating = input.rating != null ? input.rating : photo.rating;
-    photo.basePrice =
-      input.basePrice != null ? input.basePrice : photo.basePrice;
-    photo.priceModifier =
-      input.priceModifier != null ? input.priceModifier : photo.priceModifier;
+    photo.basePrice12 =
+      input.basePrice12 != null ? input.basePrice12 : photo.basePrice12;
+    photo.priceModifier12 =
+      input.priceModifier12 != null
+        ? input.priceModifier12
+        : photo.priceModifier12;
+    photo.basePrice16 =
+      input.basePrice16 != null ? input.basePrice16 : photo.basePrice16;
+    photo.priceModifier16 =
+      input.priceModifier16 != null
+        ? input.priceModifier16
+        : photo.priceModifier16;
+    photo.basePrice20 =
+      input.basePrice20 != null ? input.basePrice20 : photo.basePrice20;
+    photo.priceModifier20 =
+      input.priceModifier20 != null
+        ? input.priceModifier20
+        : photo.priceModifier20;
+    photo.basePrice24 =
+      input.basePrice24 != null ? input.basePrice24 : photo.basePrice24;
+    photo.priceModifier24 =
+      input.priceModifier24 != null
+        ? input.priceModifier24
+        : photo.priceModifier24;
+    photo.basePrice30 =
+      input.basePrice30 != null ? input.basePrice30 : photo.basePrice30;
+    photo.priceModifier30 =
+      input.priceModifier30 != null
+        ? input.priceModifier30
+        : photo.priceModifier30;
     photo.sortIndex = input.rating
       ? parseInt(input.rating.toString() + photo.sku.toString())
       : photo.sortIndex;
@@ -950,27 +1017,6 @@ export default class PhotoResolver {
 
       await this.photoCollectionRepository.save(newPhotoCollections);
       photo.collectionsForPhoto = newPhotoCollections;
-    }
-
-    // * finishes
-    if (input.finishIds) {
-      // use photo.id to find all existing entries and remove them
-      const photoFinishesToDelete = await this.photoFinishRepository.find({
-        where: { photoId: photo.id },
-      });
-      await this.photoFinishRepository.remove(photoFinishesToDelete);
-
-      const newPhotoFinishes: PhotoFinish[] = [];
-      for await (const finishId of input.finishIds) {
-        const newPhotoFinish = await this.photoFinishRepository.create({
-          photoId: photo.id,
-          finishId: finishId,
-        });
-        newPhotoFinishes.push(newPhotoFinish);
-      }
-
-      await this.photoFinishRepository.save(newPhotoFinishes);
-      photo.finishesForPhoto = newPhotoFinishes;
     }
 
     photo = await photo.save();

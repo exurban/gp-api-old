@@ -161,41 +161,36 @@ type UserShoppingBagItem {
   photo: Photo!
 }
 
-type Finish {
+type Print {
   id: ID!
-
-  # The name of the finish.
   name: String!
-
-  # Optional. A description of the tag used in connection with the vignette for the finish.
   description: String
+  type: String!
 
-  # Optional. An image of the finish.
+  # Optional. An image of the print.
   coverImage: Image
-
-  # SKU for the type of finish. Combined with width & height to create FinishSKU, which is auto-generated as a Field Resolver. ProductSKU = sku-finSku-heightxwidth
-  finSku: String!
-  width: Float!
-  height: Float!
-  depth: Float!
-  weight: Float!
-  shippingWeight: Float!
+  printSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
   basePrice: Float!
   priceModifier: Float!
-  photosWithFinish: [PhotoFinish!]
-
-  # Count of photos available with the finish.
+  photosWithPrint: [PhotoPrint!]
   countOfPhotos: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
   finishSku: String!
 }
 
-type PhotoFinish {
-  finishId: Finish!
-  finish: Finish!
+type PhotoPrint {
+  printId: Print!
+  print: Print!
   photoId: Photo!
   photo: Photo!
+  basePrice: Float!
+  productSku: String!
 }
 
 type Photo {
@@ -209,8 +204,17 @@ type Photo {
   isLimitedEdition: Boolean!
   isHidden: Boolean!
   rating: Int!
-  basePrice: Float
-  priceModifier: Float
+  printTypes: [String!]!
+  basePrice12: Float
+  priceModifier12: Float
+  basePrice16: Float
+  priceModifier16: Float
+  basePrice20: Float
+  priceModifier20: Float
+  basePrice24: Float
+  priceModifier24: Float
+  basePrice30: Float
+  priceModifier30: Float
   photographer: Photographer
   location: Location
   images: [Image!]!
@@ -220,7 +224,7 @@ type Photo {
   subjectsInPhoto: [PhotoSubject!]
   tagsForPhoto: [PhotoTag!]
   collectionsForPhoto: [PhotoCollection!]
-  finishesForPhoto: [PhotoFinish!]
+  printsForPhoto: [PhotoPrint!]
   favoritedByUsers: [UserFavorite!]
   inShoppingBagsOfUsers: [UserShoppingBagItem!]
   createdAt: DateTime!
@@ -275,37 +279,42 @@ type AllPhotosInCollectionResponse {
   photos: [Photo!]!
 }
 
-type PaginatedResponse {
-  startCursor: Int!
-  endCursor: Int!
-  total: Int!
+type Frame {
+  id: ID!
+  name: String!
+  description: String
+  material: String!
+  color: String!
+  printType: String!
+
+  # Optional. An image of the frame.
+  coverImage: Image
+  frameSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
-type SearchFinishesResponse {
-  datalist: [Finish!]!
+type SearchFramesResponse {
+  datalist: [Frame!]!
 }
 
-type GroupedPhotosWithFinishResponse {
-  photos: [Photo!]!
-  finishInfo: Finish!
-}
-
-type PaginatedPhotosWithFinishResponse {
-  photos: [Photo!]!
-  pageInfo: PaginatedResponse!
-  finishInfo: Finish!
-}
-
-type AddFinishResponse {
+type AddFrameResponse {
   success: Boolean!
   message: String!
-  newFinish: Finish
+  newFrame: Frame
 }
 
-type UpdateFinishResponse {
+type UpdateFrameResponse {
   success: Boolean!
   message: String!
-  updatedFinish: Finish
+  updatedFrame: Frame
 }
 
 type AddImageResponse {
@@ -318,6 +327,12 @@ type UpdateImageResponse {
   success: Boolean!
   message: String!
   updatedImage: Image
+}
+
+type PaginatedResponse {
+  startCursor: Int!
+  endCursor: Int!
+  total: Int!
 }
 
 type SearchLocationsResponse {
@@ -355,6 +370,41 @@ type UpdateLocationResponse {
   success: Boolean!
   message: String!
   updatedLocation: Location
+}
+
+type Mat {
+  id: ID!
+  name: String!
+  description: String
+
+  # Optional. An image of the mat.
+  coverImage: Image
+  matSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SearchMatsResponse {
+  datalist: [Mat!]!
+}
+
+type AddMatResponse {
+  success: Boolean!
+  message: String!
+  newMat: Mat
+}
+
+type UpdateMatResponse {
+  success: Boolean!
+  message: String!
+  updatedMat: Mat
 }
 
 type ItemCountList {
@@ -403,6 +453,18 @@ type UpdatePhotographerResponse {
   updatedPhotographer: Photographer
 }
 
+type AddPhotoPrintResponse {
+  success: Boolean!
+  message: String!
+  newPhotoPrint: PhotoPrint
+}
+
+type UpdatePhotoPrintResponse {
+  success: Boolean!
+  message: String!
+  updatedPhotoPrint: PhotoPrint
+}
+
 type SelectionOption {
   id: Int!
   name: String!
@@ -437,18 +499,12 @@ type CollectionSelectionOption {
   name: String!
 }
 
-type FinishSelectionOption {
-  id: Int!
-  name: String!
-}
-
 type PhotoEditSelectionOptions {
   photographers: [PhotographerSelectionOption!]!
   locations: [LocationSelectionOption!]!
   subjects: [SubjectSelectionOption!]!
   tags: [TagSelectionOption!]!
   collections: [CollectionSelectionOption!]!
-  finishes: [FinishSelectionOption!]!
 }
 
 type SearchPhotosResponse {
@@ -480,6 +536,22 @@ type UpdatePhotoResponse {
 type AllFeaturedPhotosResponse {
   total: Int!
   photos: [Photo!]!
+}
+
+type SearchPrintsResponse {
+  datalist: [Print!]!
+}
+
+type AddPrintResponse {
+  success: Boolean!
+  message: String!
+  newPrint: Print
+}
+
+type UpdatePrintResponse {
+  success: Boolean!
+  message: String!
+  updatedPrint: Print
 }
 
 type SubjectsResponse {
@@ -628,48 +700,40 @@ input AllPhotosInCollectionInput {
   id: Float
 }
 
-input AddFinishInput {
+input AddFrameInput {
   name: String!
-  description: String!
+  description: String
+  material: String!
+  color: String!
   coverImageId: Float
-  finSku: String!
-  width: Float!
-  height: Float!
-  depth: Float!
-  weight: Float!
-  shippingWeight: Float!
+  frameSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
   basePrice: Float!
   priceModifier: Float!
 }
 
-input UpdateFinishInput {
+input UpdateFrameInput {
   name: String
   description: String
+  material: String
+  color: String
   coverImageId: Float
-  finSku: String
-  width: Float
-  height: Float
-  depth: Float
-  weight: Float
-  shippingWeight: Float
+  frameSku: String
+  aspectRatio: String
+  dimension1: Float
+  dimension2: Float
+  cost: Float
+  shippingCost: Float
   basePrice: Float
   priceModifier: Float
 }
 
-input SearchFinishesInput {
+input SearchFramesInput {
   searchString: String!
-}
-
-input GroupedPhotosWithFinishInput {
-  id: Float
-  name: String
-}
-
-input PaginatedPhotosWithFinishInput {
-  name: String
-  id: Float
-  cursor: Int
-  take: Int!
 }
 
 input AddImageInput {
@@ -757,14 +821,43 @@ input PaginatedPhotosAtLocationInput {
   take: Int!
 }
 
+input AddMatInput {
+  name: String!
+  description: String
+  color: String!
+  coverImageId: Float
+  matSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+}
+
+input UpdateMatInput {
+  name: String
+  description: String
+  color: String
+  coverImageId: Float
+  matSku: String
+  aspectRatio: String
+  dimension1: Float
+  dimension2: Float
+  cost: Float
+  shippingCost: Float
+  basePrice: Float
+  priceModifier: Float
+}
+
+input SearchMatsInput {
+  searchString: String!
+}
+
 input PhotoCollectionInput {
   photoId: Int!
   collectionId: Int!
-}
-
-input PhotoFinishInput {
-  photoId: Int!
-  finishId: Int!
 }
 
 # Inputs to create a new Photographer entity.
@@ -830,20 +923,47 @@ input PaginatedPhotosByPhotographerInput {
   take: Int!
 }
 
+input PhotoPrintInput {
+  photoId: Int!
+  printId: Int!
+}
+
+input AddPhotoPrintInput {
+  photoId: Int!
+  printId: Int!
+  basePrice: Float!
+  productSku: String!
+}
+
+input UpdatePhotoFinishInput {
+  photoId: Int!
+  printId: Int!
+  basePrice: Float!
+  productSku: String!
+}
+
 input AddPhotoInput {
   title: String = "Untitled"
   description: String = "No description provided."
   isFeatured: Boolean = false
   isLimitedEdition: Boolean = false
   rating: Int = 5
-  basePrice: Float = 375
-  priceModifier: Float = 0
+  basePrice12: Float = 100
+  priceModifier12: Float = 1
+  basePrice16: Float = 140
+  priceModifier16: Float = 1
+  basePrice20: Float = 180
+  priceModifier20: Float = 1
+  basePrice24: Float = 230
+  priceModifier24: Float = 1
+  basePrice30: Float = 275
+  priceModifier30: Float = 1
   photographerId: Int
   locationId: Int
   subjectIds: [Int!]
   tagIds: [Int!]
   collectionIds: [Int!]
-  finishIds: [Int!]
+  printIds: [Int!]
   imageId: Int
   sharingImageId: Int
 }
@@ -855,8 +975,16 @@ input UpdatePhotoInput {
   isFeatured: Boolean
   isLimitedEdition: Boolean
   rating: Int
-  basePrice: Float
-  priceModifier: Float
+  basePrice12: Float = 100
+  priceModifier12: Float = 1
+  basePrice16: Float = 140
+  priceModifier16: Float = 1
+  basePrice20: Float = 180
+  priceModifier20: Float = 1
+  basePrice24: Float = 230
+  priceModifier24: Float = 1
+  basePrice30: Float = 275
+  priceModifier30: Float = 1
   imageId: Int
   sharingImageId: Int
   photographerId: Int
@@ -864,7 +992,7 @@ input UpdatePhotoInput {
   subjectIds: [Int!]
   tagIds: [Int!]
   collectionIds: [Int!]
-  finishIds: [Int!]
+  printIds: [Int!]
 }
 
 input PhotoSearchSortInput {
@@ -880,6 +1008,40 @@ input SearchPhotosInput {
 input PaginatedPhotosInput {
   cursor: Int
   take: Int!
+}
+
+input AddPrintInput {
+  name: String!
+  description: String
+  type: String!
+  coverImageId: Float
+  printSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+}
+
+input UpdatePrintInput {
+  name: String
+  description: String
+  type: String
+  coverImageId: Float
+  printSku: String
+  aspectRatio: String
+  dimension1: Float
+  dimension2: Float
+  cost: Float
+  shippingCost: Float
+  basePrice: Float
+  priceModifier: Float
+}
+
+input SearchPrintsInput {
+  searchString: String!
 }
 
 # Inputs to create a new Subject entity.
@@ -990,11 +1152,10 @@ type Query {
   collectionWithPhotos(id: Int!): Collection!
   allPhotosInCollection(input: AllPhotosInCollectionInput!): AllPhotosInCollectionResponse!
 
-  # Search Finishes. Returns Finish + Cover Image.
-  searchFinishes(input: SearchFinishesInput!): SearchFinishesResponse!
-  finish(id: Int!): Finish!
-  groupedPhotosWithFinish(input: GroupedPhotosWithFinishInput!): GroupedPhotosWithFinishResponse!
-  paginatedPhotosWithFinish(input: PaginatedPhotosWithFinishInput!): PaginatedPhotosWithFinishResponse!
+  # Search Frames. Returns Frame + Cover Image.
+  searchFrames(input: SearchFramesInput!): SearchFramesResponse!
+  framesWithAspectRatio(aspectRatio: String!): [Frame!]!
+  frame(id: Int!): Frame!
   images: [Image!]!
   image(id: Int!): Image!
 
@@ -1012,6 +1173,11 @@ type Query {
   groupedPhotosAtLocation(input: GroupedPhotosAtLocationInput!): GroupedPhotosAtLocationResponse!
   paginatedPhotosAtLocation(input: PaginatedPhotosAtLocationInput!): PaginatedPhotosAtLocationResponse!
   allPhotosAtLocation(input: AllPhotosAtLocationInput!): AllPhotosAtLocationResponse!
+
+  # Search Mats. Returns Mat + Cover Image.
+  searchMats(input: SearchMatsInput!): SearchMatsResponse!
+  matsWithAspectRatio(aspectRatio: String!): [Mat!]!
+  mat(id: Int!): Mat!
   photoCountBySubject: ItemCountList!
   photoCountByTag: ItemCountList!
   photoCountByCollection: ItemCountList!
@@ -1044,6 +1210,10 @@ type Query {
   photo(id: Int!): Photo
   photoWithSku(sku: Int!): Photo!
   photoEditOptions: PhotoEditSelectionOptions!
+
+  # Search Prints. Returns Print + Cover Image.
+  searchPrints(input: SearchPrintsInput!): SearchPrintsResponse!
+  finish(id: Int!): Print!
   userSearch(phrase: String!): [UserSearchResult!]!
 
   # Returns all Subjects + cover images. Sortable and filterable.
@@ -1083,9 +1253,9 @@ type Mutation {
   addCollection(input: AddCollectionInput!): AddCollectionResponse!
   updateCollection(input: UpdateCollectionInput!, id: Int!): UpdateCollectionResponse!
   deleteCollection(id: Int!): Boolean!
-  addFinish(input: AddFinishInput!): AddFinishResponse!
-  updateFinish(input: UpdateFinishInput!, id: Int!): UpdateFinishResponse!
-  deleteFinish(id: Int!): Boolean!
+  addPrint(input: AddPrintInput!): AddPrintResponse!
+  updatePrint(input: UpdatePrintInput!, id: Int!): UpdatePrintResponse!
+  deleteMat(id: Int!): Boolean!
   addImage(input: AddImageInput!): AddImageResponse!
   updateImage(input: UpdateImageInput!, id: Int!): UpdateImageResponse!
   deleteImage(id: Int!): Boolean!
@@ -1093,16 +1263,19 @@ type Mutation {
   addLocation(input: AddLocationInput!): AddLocationResponse!
   updateLocation(input: UpdateLocationInput!, id: Int!): UpdateLocationResponse!
   deleteLocation(id: Int!): Boolean!
+  addMat(input: AddMatInput!): AddMatResponse!
   addPhotoToCollection(input: PhotoCollectionInput!): Boolean!
   removePhotoFromCollection(input: PhotoCollectionInput!): Boolean!
-  addFinishToPhoto(input: PhotoFinishInput!): Boolean!
-  removeFinishFromPhoto(input: PhotoFinishInput!): Boolean!
   addPhotographer(input: AddPhotographerInput!): AddPhotographerResponse!
   updatePhotographer(input: UpdatePhotographerInput!, id: Int!): UpdatePhotographerResponse!
   deletePhotographer(id: Int!): Boolean!
+  addPhotoPrint(input: AddPhotoPrintInput!): AddPhotoPrintResponse!
+  updatePhotoPrint(input: UpdatePhotoFinishInput!): UpdatePhotoPrintResponse!
+  removeFinishFromPhoto(input: PhotoPrintInput!): Boolean!
   addPhoto(input: AddPhotoInput!): AddPhotoResponse!
   updatePhoto(input: UpdatePhotoInput!, id: Int!): UpdatePhotoResponse!
   deletePhoto(id: Int!): Boolean!
+  deletePrint(id: Int!): Boolean!
   addSubject(input: AddSubjectInput!): AddSubjectResponse!
   updateSubject(input: UpdateSubjectInput!, id: Int!): UpdateSubjectResponse!
   deleteSubject(id: Int!): Boolean!

@@ -13,8 +13,8 @@ import Tag from "../entities/Tag";
 import PhotoTag from "../entities/PhotoTag";
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
-import Finish from "../entities/Finish";
-import PhotoFinish from "../entities/PhotoFinish";
+import Print from "../entities/Print";
+import PhotoPrint from "../entities/PhotoPrint";
 import Image from "../entities/Image";
 
 import {
@@ -23,17 +23,17 @@ import {
   subjects,
   tags,
   collectionData,
-  finishData,
+  printData,
   imageData,
 } from "./seedData";
 
-//! add finishes collections @ManyToMany relationships
+//! add prints collections @ManyToMany relationships
 
 const newSubjects: Subject[] = [];
 const newTags: Tag[] = [];
 const newCollections: Collection[] = [];
 const newLocations: Location[] = [];
-const newFinishes: Finish[] = [];
+const newPrints: Print[] = [];
 const newPhotographers: Photographer[] = [];
 
 interface ILocation {
@@ -49,15 +49,16 @@ interface ICollection {
   description: string;
 }
 
-interface IFinish {
+interface IPrint {
   name: string;
   description: string;
-  finSku: string;
-  width: number;
-  height: number;
-  depth: number;
-  weight: number;
-  shippingWeight: number;
+  type: string;
+  aspectRatio: string;
+  printSku: string;
+  dimension1: number;
+  dimension2: number;
+  cost: number;
+  shippingCost: number;
   basePrice: number;
   priceModifier: number;
 }
@@ -112,23 +113,22 @@ const addCollections = (collections: ICollection[]): Collection[] => {
   return newCollections;
 };
 
-const addFinishes = (finishes: IFinish[]): Finish[] => {
-  finishes.forEach((f) => {
-    const fin = new Finish();
-    fin.name = f.name;
-    fin.description = f.description;
-    fin.finSku = f.finSku;
-    fin.width = f.width;
-    fin.height = f.height;
-    fin.depth = f.depth;
-    fin.weight = f.weight;
-    fin.shippingWeight = f.shippingWeight;
-    fin.basePrice = f.basePrice;
-    fin.priceModifier = f.priceModifier;
-    newFinishes.push(fin);
+const addPrints = (prints: IPrint[]): Print[] => {
+  prints.forEach((pr) => {
+    const print = new Print();
+    print.name = pr.name;
+    print.description = pr.description;
+    print.type = pr.type;
+    print.aspectRatio = pr.aspectRatio;
+    print.printSku = pr.printSku;
+    print.dimension1 = pr.dimension1;
+    print.dimension2 = pr.dimension2;
+    print.basePrice = pr.basePrice;
+    print.priceModifier = pr.priceModifier;
+    newPrints.push(print);
   });
 
-  return newFinishes;
+  return newPrints;
 };
 
 const addLocations = (locations: ILocation[]): Location[] => {
@@ -297,29 +297,29 @@ const addImagesToPhotos = async (args: {
   );
 };
 
-const addFinishesToPhotos = async (args: {
+const addPrintsToPhotos = async (args: {
   pRepository: Repository<Photo>;
-  fRepository: Repository<Finish>;
-  pfRepository: Repository<PhotoFinish>;
+  prRepository: Repository<Print>;
+  ppRepository: Repository<PhotoPrint>;
 }) => {
-  const [finishes, photos] = await Promise.all([
-    args.fRepository.find(),
+  const [prints, photos] = await Promise.all([
+    args.prRepository.find(),
     args.pRepository.find(),
   ]);
 
   // loop through each photo
   Promise.all(
     photos.map(async (photo) => {
-      // create a PhotoFinish relationship between current photo and all finishes
-      const newPhotoFinishes: PhotoFinish[] = [];
-      for await (const finish of finishes) {
-        const pf = await args.pfRepository.create({
+      // create a PhotoPrint relationship between current photo and all prints
+      const newPhotoPrints: PhotoPrint[] = [];
+      for await (const print of prints) {
+        const pp = await args.ppRepository.create({
           photo: photo,
-          finish: finish,
+          print: print,
         });
-        newPhotoFinishes.push(pf);
+        newPhotoPrints.push(pp);
       }
-      await args.pfRepository.insert(newPhotoFinishes).catch((e) => {
+      await args.ppRepository.insert(newPhotoPrints).catch((e) => {
         console.error(e.message);
         process.exit(1);
       });
@@ -372,8 +372,8 @@ const seed = async () => {
     PhotoCollection
   );
   const imageRepository = await connection.getRepository(Image);
-  const finishRepository = await connection.getRepository(Finish);
-  const photoFinishRespository = await connection.getRepository(PhotoFinish);
+  const printRepository = await connection.getRepository(Print);
+  const photoPrintRespository = await connection.getRepository(PhotoPrint);
 
   const photosCount = 200;
   const photoArgs = { photosCount };
@@ -406,17 +406,17 @@ const seed = async () => {
     process.exit(1);
   });
 
-  console.log(`Added Collections. Starting Finishes.`);
+  console.log(`Added Collections. Starting Prints.`);
 
-  // * Finishes
-  const newFinishes = addFinishes(finishData);
+  // * Prints
+  const newPrints = addPrints(printData);
 
-  await finishRepository.insert(newFinishes).catch((e) => {
+  await printRepository.insert(newPrints).catch((e) => {
     console.error(e.message);
     process.exit(1);
   });
 
-  console.log(`Added Finishes. Starting Locations.`);
+  console.log(`Added Prints. Starting Locations.`);
 
   // * Locations
   const newLocations = addLocations(locationData);
@@ -485,14 +485,14 @@ const seed = async () => {
 
   await addPhotosToCollections(cArgs);
 
-  // * finishes to photos
+  // * prints to photos
   const fArgs = {
     pRepository: photoRepository,
-    fRepository: finishRepository,
-    pfRepository: photoFinishRespository,
+    prRepository: printRepository,
+    ppRepository: photoPrintRespository,
   };
 
-  await addFinishesToPhotos(fArgs);
+  await addPrintsToPhotos(fArgs);
 
   // * add images to photos
   const iArgs = {

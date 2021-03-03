@@ -11,80 +11,77 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import PhotoFinish from "./PhotoFinish";
+import PhotoPrint from "./PhotoPrint";
 import Image from "./Image";
 
 @ObjectType()
-@Entity({ name: "finishes" })
-export default class Finish extends BaseEntity {
+@Entity({ name: "prints" })
+export default class Print extends BaseEntity {
   @Index({ unique: true })
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   readonly id: number;
 
   @Index()
-  @Field({ description: "The name of the finish." })
+  @Field()
   @Column()
   name: string;
 
-  @Field({
-    nullable: true,
-    description:
-      "Optional. A description of the tag used in connection with the vignette for the finish.",
-  })
+  @Field({ nullable: true })
   @Column({ nullable: true })
   description?: string;
 
+  @Index()
+  @Field()
+  @Column()
+  type: string;
+
   @Field(() => Image, {
     nullable: true,
-    description: "Optional. An image of the finish.",
+    description: "Optional. An image of the print.",
   })
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   coverImage?: Image;
 
-  @Field({
-    description:
-      "SKU for the type of finish. Combined with width & height to create FinishSKU, which is auto-generated as a Field Resolver. ProductSKU = sku-finSku-heightxwidth",
-  })
+  @Field()
   @Column()
-  finSku: string;
+  printSku: string;
+
+  @Index()
+  @Field()
+  @Column()
+  aspectRatio: string;
 
   @Field(() => Float)
   @Column("float")
-  width: number;
+  dimension1: number;
 
   @Field(() => Float)
   @Column("float")
-  height: number;
+  dimension2: number;
 
   @Field(() => Float)
   @Column("float")
-  depth: number;
+  cost: number;
 
   @Field(() => Float)
   @Column("float")
-  weight: number;
-
-  @Field(() => Float)
-  @Column("float")
-  shippingWeight: number;
+  shippingCost: number;
 
   @Field(() => Float)
   @Column("float")
   basePrice: number;
 
   @Field(() => Float)
-  @Column("float")
+  @Column("float", { default: 1.0 })
   priceModifier: number;
 
-  @Field(() => [PhotoFinish], { nullable: true })
-  @OneToMany(() => PhotoFinish, (pf) => pf.finish, { nullable: true })
-  photosWithFinish?: Promise<PhotoFinish[]>;
+  @Field(() => [PhotoPrint], { nullable: true })
+  @OneToMany(() => PhotoPrint, (pp) => pp.print, { nullable: true })
+  photosWithPrint?: Promise<PhotoPrint[]>;
 
-  @Field(() => Int, {
-    description: "Count of photos available with the finish.",
-  })
+  @Field(() => Int)
   countOfPhotos: number;
 
   @Field()

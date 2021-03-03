@@ -25,7 +25,7 @@ import PhotoSubject from "./PhotoSubject";
 import PhotoTag from "./PhotoTag";
 import UserFavorite from "./UserFavorite";
 import UserShoppingBagItem from "./UserShoppingBagItem";
-import PhotoFinish from "./PhotoFinish";
+import PhotoPrint from "./PhotoPrint";
 
 @ObjectType()
 @Entity({ name: "photos" })
@@ -77,13 +77,49 @@ export default class Photo extends BaseEntity {
   @Max(10)
   rating: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
-  basePrice: number;
+  @Field(() => [String])
+  @Column("simple-array", { default: "PAPER,ALU" })
+  printTypes: string[];
 
   @Field(() => Float, { nullable: true })
-  @Column("float", { default: 0, nullable: true })
-  priceModifier: number;
+  @Column("float", { nullable: true })
+  basePrice12: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { default: 1, nullable: true })
+  priceModifier12: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { nullable: true })
+  basePrice16: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { default: 1, nullable: true })
+  priceModifier16: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { nullable: true })
+  basePrice20: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { default: 1, nullable: true })
+  priceModifier20: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { nullable: true })
+  basePrice24: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { default: 1, nullable: true })
+  priceModifier24: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { nullable: true })
+  basePrice30: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { default: 1, nullable: true })
+  priceModifier30: number;
 
   @Field(() => Photographer, { nullable: true })
   @ManyToOne(() => Photographer, (photographer) => photographer.photos, {
@@ -121,9 +157,9 @@ export default class Photo extends BaseEntity {
   @OneToMany(() => PhotoCollection, (pc) => pc.photo)
   collectionsForPhoto: PhotoCollection[];
 
-  @Field(() => [PhotoFinish], { nullable: true })
-  @OneToMany(() => PhotoFinish, (pc) => pc.photo)
-  finishesForPhoto: PhotoFinish[];
+  @Field(() => [PhotoPrint], { nullable: true })
+  @OneToMany(() => PhotoPrint, (pp) => pp.photo)
+  printsForPhoto: PhotoPrint[];
 
   @Field(() => [UserFavorite], { nullable: true })
   @OneToMany(() => UserFavorite, (fav) => fav.photo)
