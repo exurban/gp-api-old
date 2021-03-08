@@ -2,7 +2,6 @@ import {
   Arg,
   Authorized,
   Field,
-  FieldResolver,
   Float,
   InputType,
   Int,
@@ -10,13 +9,11 @@ import {
   ObjectType,
   Query,
   Resolver,
-  Root,
 } from "type-graphql";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Print from "../entities/Print";
 import Image from "../entities/Image";
-import PhotoPrint from "../entities/PhotoPrint";
 import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 
 //* Input Types
@@ -36,9 +33,6 @@ class AddPrintInput {
 
   @Field()
   printSku: string;
-
-  @Field()
-  aspectRatio: string;
 
   @Field(() => Float)
   dimension1: number;
@@ -75,9 +69,6 @@ class UpdatePrintInput {
 
   @Field({ nullable: true })
   printSku?: string;
-
-  @Field({ nullable: true })
-  aspectRatio?: string;
 
   @Field(() => Float, { nullable: true })
   dimension1?: number;
@@ -128,24 +119,9 @@ export default class PrintResolver {
   constructor(
     @InjectRepository(Print)
     private printRepository: Repository<Print>,
-    @InjectRepository(PhotoPrint)
-    private photoPrintRepository: Repository<PhotoPrint>,
     @InjectRepository(Image)
     private imageRepository: Repository<Image>
   ) {}
-
-  // * Field Resolvers
-  @FieldResolver()
-  async countOfPhotos(@Root() print: Print): Promise<number> {
-    return await this.photoPrintRepository.count({
-      printId: print.id,
-    });
-  }
-
-  @FieldResolver(() => String)
-  finishSku(@Root() print: Print) {
-    return `${print.printSku}-${print.dimension1}x${print.dimension2}`;
-  }
 
   // * Queries - Print + Cover Image Only
   @Query(() => SearchPrintsResponse, {
@@ -157,15 +133,15 @@ export default class PrintResolver {
     const searchString = input.searchString;
 
     const prints = await this.printRepository
-      .createQueryBuilder("fin")
-      .leftJoinAndSelect("fin.coverImage", "ci")
-      .where("fin.name ilike :searchString", {
+      .createQueryBuilder("pr")
+      .leftJoinAndSelect("pr.coverImage", "ci")
+      .where("pr.name ilike :searchString", {
         searchString: `%${searchString}%`,
       })
-      .where("fin.finSku ilike :searchString", {
+      .where("pr.printSku ilike :searchString", {
         searchString: `%${searchString}%`,
       })
-      .orWhere("fin.description ilike :searchString", {
+      .orWhere("pr.description ilike :searchString", {
         searchString: `%${searchString}%`,
       })
       .getMany();
@@ -175,7 +151,7 @@ export default class PrintResolver {
   }
 
   @Query(() => Print)
-  async finish(@Arg("id", () => Int) id: number): Promise<Print | undefined> {
+  async print(@Arg("id", () => Int) id: number): Promise<Print | undefined> {
     return await this.printRepository.findOne(id, {
       relations: ["coverImage"],
     });

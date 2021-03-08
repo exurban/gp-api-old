@@ -1,5 +1,6 @@
 import { Field, Float, ID, ObjectType } from "type-graphql";
 import {
+  AfterInsert,
   BaseEntity,
   Column,
   CreateDateColumn,
@@ -25,9 +26,21 @@ export default class Mat extends BaseEntity {
   @Column()
   name: string;
 
+  @Field()
+  @Column({ nullable: true })
+  displayName?: string;
+
   @Field({ nullable: true })
   @Column({ nullable: true })
   description?: string;
+
+  @Field()
+  @Column()
+  color: string;
+
+  @Field()
+  @Column()
+  printType: string;
 
   @Field(() => Image, {
     nullable: true,
@@ -43,7 +56,7 @@ export default class Mat extends BaseEntity {
 
   @Index()
   @Field()
-  @Column()
+  @Column({ nullable: true })
   aspectRatio: string;
 
   @Field(() => Float)
@@ -77,4 +90,32 @@ export default class Mat extends BaseEntity {
   @Field()
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
+
+  @AfterInsert()
+  setAspectRatio() {
+    if (this.dimension1 === this.dimension2) {
+      this.aspectRatio = "1:1";
+    }
+
+    const ar = this.dimension1 / this.dimension2;
+    switch (true) {
+      case ar < 0.3:
+        this.aspectRatio = "1:4";
+        break;
+      case ar < 0.4:
+        this.aspectRatio = "1:3";
+        break;
+      case ar < 0.6:
+        this.aspectRatio = "1:2";
+        break;
+      case ar < 0.72:
+        this.aspectRatio = "2:3";
+        break;
+      case ar < 0.94:
+        this.aspectRatio = "4:5";
+        break;
+      default:
+        this.aspectRatio = "1:1";
+    }
+  }
 }

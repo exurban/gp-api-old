@@ -25,7 +25,6 @@ import PhotoSubject from "./PhotoSubject";
 import PhotoTag from "./PhotoTag";
 import UserFavorite from "./UserFavorite";
 import UserShoppingBagItem from "./UserShoppingBagItem";
-import PhotoPrint from "./PhotoPrint";
 
 @ObjectType()
 @Entity({ name: "photos" })
@@ -156,10 +155,6 @@ export default class Photo extends BaseEntity {
   @Field(() => [PhotoCollection], { nullable: true })
   @OneToMany(() => PhotoCollection, (pc) => pc.photo)
   collectionsForPhoto: PhotoCollection[];
-
-  @Field(() => [PhotoPrint], { nullable: true })
-  @OneToMany(() => PhotoPrint, (pp) => pp.photo)
-  printsForPhoto: PhotoPrint[];
 
   @Field(() => [UserFavorite], { nullable: true })
   @OneToMany(() => UserFavorite, (fav) => fav.photo)

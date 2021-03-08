@@ -22,6 +22,9 @@ class AddFrameInput {
   @Field()
   name: string;
 
+  @Field()
+  displayName: string;
+
   @Field({ nullable: true })
   description?: string;
 
@@ -31,14 +34,14 @@ class AddFrameInput {
   @Field()
   color: string;
 
+  @Field()
+  printType: string;
+
   @Field({ nullable: true })
   coverImageId?: number;
 
   @Field()
   frameSku: string;
-
-  @Field()
-  aspectRatio: string;
 
   @Field(() => Float)
   dimension1: number;
@@ -65,6 +68,9 @@ class UpdateFrameInput {
   name?: string;
 
   @Field({ nullable: true })
+  displayName?: string;
+
+  @Field({ nullable: true })
   description?: string;
 
   @Field({ nullable: true })
@@ -74,13 +80,13 @@ class UpdateFrameInput {
   color?: string;
 
   @Field({ nullable: true })
+  printType?: string;
+
+  @Field({ nullable: true })
   coverImageId?: number;
 
   @Field({ nullable: true })
   frameSku?: string;
-
-  @Field({ nullable: true })
-  aspectRatio?: string;
 
   @Field(() => Float, { nullable: true })
   dimension1?: number;
@@ -184,7 +190,7 @@ export default class FrameResolver {
   //* Mutations
   @Authorized("ADMIN")
   @Mutation(() => AddFrameResponse)
-  async addPrint(
+  async addFrame(
     @Arg("input", () => AddFrameInput) input: AddFrameInput
   ): Promise<AddFrameResponse> {
     const newFrame = await this.frameRepository.create(input);
@@ -205,7 +211,7 @@ export default class FrameResolver {
 
   @Authorized("ADMIN")
   @Mutation(() => UpdateFrameResponse)
-  async updatePrint(
+  async updateFrame(
     @Arg("id", () => Int) id: number,
     @Arg("input", () => UpdateFrameInput) input: UpdateFrameInput
   ): Promise<UpdateFrameResponse> {
@@ -234,7 +240,7 @@ export default class FrameResolver {
 
   @Authorized("ADMIN")
   @Mutation(() => Boolean)
-  async deleteMat(@Arg("id", () => Int) id: number): Promise<boolean> {
+  async deleteFrame(@Arg("id", () => Int) id: number): Promise<boolean> {
     const deleteResult = await this.frameRepository.delete({ id });
     if (deleteResult && deleteResult.affected != 0) {
       return true;

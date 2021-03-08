@@ -22,7 +22,6 @@ import Tag from "../entities/Tag";
 import PhotoTag from "../entities/PhotoTag";
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
-import PhotoPrint from "../entities/PhotoPrint";
 import { PaginatedPhotosResponse } from "../abstract/PaginatedResponse";
 import { SortDirection } from "../abstract/Enum";
 import SelectionOption from "../abstract/SelectionOption";
@@ -46,35 +45,35 @@ class AddPhotoInput {
   @Field(() => Int, { nullable: true, defaultValue: 5 })
   rating: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 100.0 })
-  basePrice12?: number;
+  @Field(() => Float, { defaultValue: 120.0 })
+  basePrice12: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 1 })
-  priceModifier12?: number;
+  @Field(() => Float, { defaultValue: 1 })
+  priceModifier12: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 140.0 })
-  basePrice16?: number;
+  @Field(() => Float, { defaultValue: 140.0 })
+  basePrice16: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 1 })
-  priceModifier16?: number;
+  @Field(() => Float, { defaultValue: 1 })
+  priceModifier16: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 180.0 })
-  basePrice20?: number;
+  @Field(() => Float, { defaultValue: 175.0 })
+  basePrice20: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 1 })
-  priceModifier20?: number;
+  @Field(() => Float, { defaultValue: 1 })
+  priceModifier20: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 230.0 })
-  basePrice24?: number;
+  @Field(() => Float, { defaultValue: 230.0 })
+  basePrice24: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 1 })
-  priceModifier24?: number;
+  @Field(() => Float, { defaultValue: 1 })
+  priceModifier24: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 275.0 })
-  basePrice30?: number;
+  @Field(() => Float, { defaultValue: 275.0 })
+  basePrice30: number;
 
-  @Field(() => Float, { nullable: true, defaultValue: 1 })
-  priceModifier30?: number;
+  @Field(() => Float, { defaultValue: 1 })
+  priceModifier30: number;
 
   @Field(() => Int, { nullable: true })
   photographerId?: number;
@@ -90,9 +89,6 @@ class AddPhotoInput {
 
   @Field(() => [Int], { nullable: true })
   collectionIds?: number[];
-
-  @Field(() => [Int], { nullable: true })
-  printIds?: number[];
 
   @Field(() => Int, { nullable: true })
   imageId?: number;
@@ -171,9 +167,6 @@ class UpdatePhotoInput {
 
   @Field(() => [Int], { nullable: true })
   collectionIds?: number[];
-
-  @Field(() => [Int], { nullable: true })
-  printIds?: number[];
 }
 
 @InputType()
@@ -302,10 +295,7 @@ export default class PhotoResolver {
     @InjectRepository(Collection)
     private collectionRepository: Repository<Collection>,
     @InjectRepository(PhotoCollection)
-    private photoCollectionRepository: Repository<PhotoCollection>,
-
-    @InjectRepository(PhotoPrint)
-    private photoPrintRepository: Repository<PhotoPrint>
+    private photoCollectionRepository: Repository<PhotoCollection>
   ) {}
 
   // * Queries -
@@ -643,8 +633,6 @@ export default class PhotoResolver {
         "tagsForPhoto.tag",
         "collectionsForPhoto",
         "collectionsForPhoto.collection",
-        "finishesForPhoto",
-        "finishesForPhoto.finish",
       ],
     });
 
@@ -667,8 +655,6 @@ export default class PhotoResolver {
       .leftJoinAndSelect("pt.tag", "t", "t.id = pt.tagId")
       .leftJoinAndSelect("p.collectionsForPhoto", "pc")
       .leftJoinAndSelect("pc.collection", "c", "c.id = pc.collectionId")
-      .leftJoinAndSelect("p.finishesForPhoto", "pf")
-      .leftJoinAndSelect("pf.finish", "f", "f.id = pf.finishId")
       .where("p.sku = :sku", { sku: sku })
 
       .getOne();
@@ -821,21 +807,6 @@ export default class PhotoResolver {
       newPhoto.collectionsForPhoto = newPhotoCollections;
     }
 
-    // * prints
-    if (input.printIds) {
-      const newPhotoPrints: PhotoPrint[] = [];
-      for await (const printId of input.printIds) {
-        const newPhotoPrint = await this.photoPrintRepository.create({
-          photoId: newPhoto.id,
-          printId: printId,
-        });
-        newPhotoPrints.push(newPhotoPrint);
-      }
-
-      await this.photoPrintRepository.save(newPhotoPrints);
-      newPhoto.printsForPhoto = newPhotoPrints;
-    }
-
     await this.photoRepository.insert(newPhoto);
     await this.photoRepository.save(newPhoto);
 
@@ -854,15 +825,7 @@ export default class PhotoResolver {
     @Arg("id", () => Int) id: number,
     @Arg("input", () => UpdatePhotoInput) input: UpdatePhotoInput
   ): Promise<UpdatePhotoResponse> {
-    let photo = await this.photoRepository.findOne(id, {
-      // relations: [
-      //   "images",
-      //   "subjectsInPhoto",
-      //   "tagsForPhoto",
-      //   "collectionsForPhoto",
-      //   "finishesForPhoto",
-      // ],
-    });
+    let photo = await this.photoRepository.findOne(id, {});
 
     if (!photo) {
       return {

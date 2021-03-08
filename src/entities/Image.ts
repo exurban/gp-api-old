@@ -2,6 +2,7 @@ import { Field, ID, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -35,6 +36,10 @@ export default class Image extends BaseEntity {
   @Field()
   @Column({ default: "new image" })
   altText: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  aspectRatio?: string;
 
   @Field()
   @Column({ default: "XL" })
@@ -77,5 +82,33 @@ export default class Image extends BaseEntity {
   @BeforeInsert()
   setIsPanoramic() {
     this.isPanoramic = this.width / 2 > this.height;
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setAspectRatio() {
+    console.log(`setting AR`);
+    if (this.width === this.height) {
+      return "1:1";
+    }
+
+    const dimension1 = this.width < this.height ? this.width : this.height;
+    const dimension2 = this.width < this.height ? this.height : this.width;
+
+    const ar = dimension1 / dimension2;
+    switch (true) {
+      case ar < 0.3:
+        return "1:4";
+      case ar < 0.4:
+        return "1:3";
+      case ar < 0.6:
+        return "1:2";
+      case ar < 0.72:
+        return "2:3";
+      case ar < 0.94:
+        return "4:5";
+      default:
+        return "1:1";
+    }
   }
 }

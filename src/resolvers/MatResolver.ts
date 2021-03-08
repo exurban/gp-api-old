@@ -22,20 +22,23 @@ class AddMatInput {
   @Field()
   name: string;
 
+  @Field()
+  shortDescription: string;
+
   @Field({ nullable: true })
   description?: string;
 
   @Field()
   color: string;
 
+  @Field()
+  printType: string;
+
   @Field({ nullable: true })
   coverImageId?: number;
 
   @Field()
   matSku: string;
-
-  @Field()
-  aspectRatio: string;
 
   @Field(() => Float)
   dimension1: number;
@@ -62,19 +65,22 @@ class UpdateMatInput {
   name?: string;
 
   @Field({ nullable: true })
+  shortDescription?: string;
+
+  @Field({ nullable: true })
   description?: string;
 
   @Field({ nullable: true })
   color?: string;
 
   @Field({ nullable: true })
+  printType?: string;
+
+  @Field({ nullable: true })
   coverImageId?: number;
 
   @Field({ nullable: true })
   matSku?: string;
-
-  @Field({ nullable: true })
-  aspectRatio?: string;
 
   @Field(() => Float, { nullable: true })
   dimension1?: number;
@@ -199,7 +205,7 @@ export default class MatResolver {
 
   @Authorized("ADMIN")
   @Mutation(() => UpdateMatResponse)
-  async updatePrint(
+  async updateMat(
     @Arg("id", () => Int) id: number,
     @Arg("input", () => UpdateMatInput) input: UpdateMatInput
   ): Promise<UpdateMatResponse> {
