@@ -14,7 +14,6 @@ import PhotoTag from "../entities/PhotoTag";
 import Collection from "../entities/Collection";
 import PhotoCollection from "../entities/PhotoCollection";
 import Print from "../entities/Print";
-import PhotoPrint from "../entities/PhotoPrint";
 import Image from "../entities/Image";
 
 import {
@@ -297,36 +296,6 @@ const addImagesToPhotos = async (args: {
   );
 };
 
-const addPrintsToPhotos = async (args: {
-  pRepository: Repository<Photo>;
-  prRepository: Repository<Print>;
-  ppRepository: Repository<PhotoPrint>;
-}) => {
-  const [prints, photos] = await Promise.all([
-    args.prRepository.find(),
-    args.pRepository.find(),
-  ]);
-
-  // loop through each photo
-  Promise.all(
-    photos.map(async (photo) => {
-      // create a PhotoPrint relationship between current photo and all prints
-      const newPhotoPrints: PhotoPrint[] = [];
-      for await (const print of prints) {
-        const pp = await args.ppRepository.create({
-          photo: photo,
-          print: print,
-        });
-        newPhotoPrints.push(pp);
-      }
-      await args.ppRepository.insert(newPhotoPrints).catch((e) => {
-        console.error(e.message);
-        process.exit(1);
-      });
-    })
-  );
-};
-
 const seed = async () => {
   // const connection = await createConnection();
   const getOptions = async () => {
@@ -373,7 +342,6 @@ const seed = async () => {
   );
   const imageRepository = await connection.getRepository(Image);
   const printRepository = await connection.getRepository(Print);
-  const photoPrintRespository = await connection.getRepository(PhotoPrint);
 
   const photosCount = 200;
   const photoArgs = { photosCount };
@@ -484,15 +452,6 @@ const seed = async () => {
   };
 
   await addPhotosToCollections(cArgs);
-
-  // * prints to photos
-  const fArgs = {
-    pRepository: photoRepository,
-    prRepository: printRepository,
-    ppRepository: photoPrintRespository,
-  };
-
-  await addPrintsToPhotos(fArgs);
 
   // * add images to photos
   const iArgs = {
