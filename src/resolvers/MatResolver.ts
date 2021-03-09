@@ -23,7 +23,7 @@ class AddMatInput {
   name: string;
 
   @Field()
-  shortDescription: string;
+  displayName: string;
 
   @Field({ nullable: true })
   description?: string;
@@ -65,7 +65,7 @@ class UpdateMatInput {
   name?: string;
 
   @Field({ nullable: true })
-  shortDescription?: string;
+  displayName?: string;
 
   @Field({ nullable: true })
   description?: string;
