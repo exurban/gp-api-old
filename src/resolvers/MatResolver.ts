@@ -174,6 +174,20 @@ export default class MatResolver {
     return mats;
   }
 
+  @Query(() => [Mat])
+  async matsWithAspectRatioAndSize(
+    @Arg("aspectRatio", () => String) aspectRatio: string,
+    @Arg("size", () => Int) size: number
+  ): Promise<Mat[]> {
+    const mats = await this.matRepository
+      .createQueryBuilder("m")
+      .leftJoinAndSelect("m.coverImage", "ci")
+      .where("m.aspectRatio = :aspectRatio", { aspectRatio: aspectRatio })
+      .andWhere("m.dimension1 = :dimension1", { dimension1: size })
+      .getMany();
+    return mats;
+  }
+
   @Query(() => Mat)
   async mat(@Arg("id", () => Int) id: number): Promise<Mat | undefined> {
     return await this.matRepository.findOne(id, {
