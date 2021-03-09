@@ -1,7 +1,8 @@
 import { Field, Float, ID, ObjectType } from "type-graphql";
 import {
-  AfterInsert,
+  BeforeInsert,
   BaseEntity,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -91,7 +92,8 @@ export default class Mat extends BaseEntity {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
-  @AfterInsert()
+  @BeforeInsert()
+  @BeforeUpdate()
   setAspectRatio() {
     if (this.dimension1 === this.dimension2) {
       this.aspectRatio = "1:1";
