@@ -274,7 +274,7 @@ class AllFeaturedPhotosResponse {
   photos: Photo[];
 }
 
-@Resolver()
+@Resolver(() => Photo)
 export default class PhotoResolver {
   //* Repositories
   constructor(
