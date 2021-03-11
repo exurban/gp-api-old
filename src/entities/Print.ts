@@ -77,7 +77,7 @@ export default class Print extends BaseEntity {
   @Column("float", { default: 1.0 })
   priceModifier: number;
 
-  @Field(() => Float)
+  @Field(() => Float, { nullable: true })
   retailPrice: number;
 
   @Field()

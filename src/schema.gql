@@ -404,6 +404,7 @@ type Print {
   shippingCost: Float!
   basePrice: Float!
   priceModifier: Float!
+  retailPrice: Float
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -1260,8 +1261,7 @@ type Query {
   # Search Prints. Returns Print + Cover Image.
   searchPrints(input: SearchPrintsInput!): SearchPrintsResponse!
   print(id: Int!): Print!
-
-  # Search PrintTypes.
+  printType(id: Int!): PrintType!
   searchPrintTypes(input: SearchPrintTypesInput!): SearchPrintTypesResponse!
   userSearch(phrase: String!): [UserSearchResult!]!
 
