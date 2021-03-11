@@ -87,9 +87,14 @@ export default class PrintTypeResolver {
   }
 
   // * Queries
-  @Query(() => SearchPrintTypesResponse, {
-    description: "Search PrintTypes.",
-  })
+  @Query(() => PrintType)
+  async printType(
+    @Arg("id", () => Int) id: number
+  ): Promise<PrintType | undefined> {
+    return await PrintType.findOne(id);
+  }
+
+  @Query(() => SearchPrintTypesResponse)
   async searchPrintTypes(
     @Arg("input", () => SearchPrintTypesInput) input: SearchPrintTypesInput
   ): Promise<SearchPrintTypesResponse> {
