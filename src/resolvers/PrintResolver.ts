@@ -127,7 +127,7 @@ export default class PrintResolver {
 
   @FieldResolver()
   retailPrice(@Root() print: Print) {
-    print.basePrice * print.priceModifier;
+    return print.basePrice * print.priceModifier;
   }
 
   // * Queries - Print + Cover Image Only
