@@ -561,6 +561,32 @@ type UpdatePrintResponse {
   updatedPrint: Print
 }
 
+type PrintType {
+  id: ID!
+  type: String!
+  displayName: String!
+  description: String!
+  lowestPriceForAspectRatio(aspectRatio: String!): Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SearchPrintTypesResponse {
+  datalist: [PrintType!]!
+}
+
+type AddPrintTypeResponse {
+  success: Boolean!
+  message: String!
+  newPrintType: PrintType
+}
+
+type UpdatePrintTypeResponse {
+  success: Boolean!
+  message: String!
+  updatedPrintType: PrintType
+}
+
 type SubjectsResponse {
   subjects: [Subject!]!
 }
@@ -832,7 +858,7 @@ input PaginatedPhotosAtLocationInput {
 
 input AddMatInput {
   name: String!
-  shortDescription: String!
+  displayName: String!
   description: String
   color: String!
   printType: String!
@@ -848,7 +874,7 @@ input AddMatInput {
 
 input UpdateMatInput {
   name: String
-  shortDescription: String
+  displayName: String
   description: String
   color: String
   printType: String
@@ -1043,6 +1069,22 @@ input SearchPrintsInput {
   searchString: String!
 }
 
+input AddPrintTypeInput {
+  type: String!
+  displayName: String!
+  description: String!
+}
+
+input UpdatePrintTypeInput {
+  type: String
+  displayName: String
+  description: String
+}
+
+input SearchPrintTypesInput {
+  searchString: String!
+}
+
 # Inputs to create a new Subject entity.
 input AddSubjectInput {
   # Name of the subject. Used in Photo Info links.
@@ -1176,6 +1218,7 @@ type Query {
   # Search Mats. Returns Mat + Cover Image.
   searchMats(input: SearchMatsInput!): SearchMatsResponse!
   matsWithAspectRatio(aspectRatio: String!): [Mat!]!
+  matsWithAspectRatioAndSize(size: Int!, aspectRatio: String!): [Mat!]!
   mat(id: Int!): Mat!
   photoCountBySubject: ItemCountList!
   photoCountByTag: ItemCountList!
@@ -1217,6 +1260,9 @@ type Query {
   # Search Prints. Returns Print + Cover Image.
   searchPrints(input: SearchPrintsInput!): SearchPrintsResponse!
   print(id: Int!): Print!
+
+  # Search PrintTypes.
+  searchPrintTypes(input: SearchPrintTypesInput!): SearchPrintTypesResponse!
   userSearch(phrase: String!): [UserSearchResult!]!
 
   # Returns all Subjects + cover images. Sortable and filterable.
@@ -1280,6 +1326,9 @@ type Mutation {
   addPrint(input: AddPrintInput!): AddPrintResponse!
   updatePrint(input: UpdatePrintInput!, id: Int!): UpdatePrintResponse!
   deletePrint(id: Int!): Boolean!
+  addPrintType(input: AddPrintTypeInput!): AddPrintTypeResponse!
+  updatePrintType(input: UpdatePrintTypeInput!, id: Int!): UpdatePrintTypeResponse!
+  deletePrintType(id: Int!): Boolean!
   addSubject(input: AddSubjectInput!): AddSubjectResponse!
   updateSubject(input: UpdateSubjectInput!, id: Int!): UpdateSubjectResponse!
   deleteSubject(id: Int!): Boolean!
