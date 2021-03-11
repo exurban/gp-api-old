@@ -2,6 +2,7 @@ import {
   Arg,
   Authorized,
   Field,
+  FieldResolver,
   Float,
   InputType,
   Int,
@@ -9,6 +10,7 @@ import {
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
@@ -297,6 +299,31 @@ export default class PhotoResolver {
     @InjectRepository(PhotoCollection)
     private photoCollectionRepository: Repository<PhotoCollection>
   ) {}
+
+  @FieldResolver()
+  retailPrice12(@Root() photo: Photo) {
+    return photo.basePrice12 * photo.priceModifier12;
+  }
+
+  @FieldResolver()
+  retailPrice16(@Root() photo: Photo) {
+    return photo.basePrice16 * photo.priceModifier16;
+  }
+
+  @FieldResolver()
+  retailPrice20(@Root() photo: Photo) {
+    return photo.basePrice20 * photo.priceModifier20;
+  }
+
+  @FieldResolver()
+  retailPrice24(@Root() photo: Photo) {
+    return photo.basePrice24 * photo.priceModifier24;
+  }
+
+  @FieldResolver()
+  retailPrice30(@Root() photo: Photo) {
+    return photo.basePrice30 * photo.priceModifier30;
+  }
 
   // * Queries -
   @Query(() => PhotosResponse, {

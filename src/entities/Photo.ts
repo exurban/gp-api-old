@@ -80,45 +80,60 @@ export default class Photo extends BaseEntity {
   @Column("simple-array", { default: "PAPER,ALU" })
   printTypes: string[];
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Field(() => Float)
+  @Column("float")
   basePrice12: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1, nullable: true })
+  @Field(() => Float)
+  @Column("float", { default: 1 })
   priceModifier12: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Field(() => Float)
+  retailPrice12: number;
+
+  @Field(() => Float)
+  @Column("float")
   basePrice16: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1, nullable: true })
+  @Field(() => Float)
+  @Column("float", { default: 1 })
   priceModifier16: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Field(() => Float)
+  retailPrice16: number;
+
+  @Field(() => Float)
+  @Column("float")
   basePrice20: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1, nullable: true })
+  @Field(() => Float)
+  @Column("float", { default: 1 })
   priceModifier20: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Field(() => Float)
+  retailPrice20: number;
+
+  @Field(() => Float)
+  @Column("float")
   basePrice24: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1, nullable: true })
+  @Field(() => Float)
+  @Column("float", { default: 1 })
   priceModifier24: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { nullable: true })
+  @Field(() => Float)
+  retailPrice24: number;
+
+  @Field(() => Float)
+  @Column("float")
   basePrice30: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column("float", { default: 1, nullable: true })
+  @Field(() => Float)
+  @Column("float", { default: 1 })
   priceModifier30: number;
+
+  @Field(() => Float)
+  retailPrice30: number;
 
   @Field(() => Photographer, { nullable: true })
   @ManyToOne(() => Photographer, (photographer) => photographer.photos, {
