@@ -74,35 +74,37 @@ export default class ProductResolver {
 
   @FieldResolver()
   totalRetailPrice(@Root() product: Product) {
-    let price;
-    const dimension1 = product.print.dimension1;
+    // let price;
+    // const dimension1 = product.print.dimension1;
 
-    switch (dimension1) {
-      case 12:
-        price = product.photo.retailPrice12;
-        break;
-      case 16:
-        price = product.photo.retailPrice16;
-        break;
-      case 20:
-        price = product.photo.retailPrice20;
-        break;
-      case 24:
-        price = product.photo.retailPrice24;
-        break;
-      default:
-        price = product.photo.retailPrice30;
+    // switch (dimension1) {
+    //   case 12:
+    //     price = product.photo.retailPrice12;
+    //     break;
+    //   case 16:
+    //     price = product.photo.retailPrice16;
+    //     break;
+    //   case 20:
+    //     price = product.photo.retailPrice20;
+    //     break;
+    //   case 24:
+    //     price = product.photo.retailPrice24;
+    //     break;
+    //   default:
+    //     price = product.photo.retailPrice30;
+    // }
+
+    let price = 120;
+
+    price += product.print.retailPrice;
+
+    if (product.mat) {
+      price += product.mat.retailPrice;
     }
 
-    // price += product.print.retailPrice;
-
-    // if (product.mat) {
-    //   price += product.mat.retailPrice;
-    // }
-
-    // if (product.frame) {
-    //   price += product.frame.retailPrice;
-    // }
+    if (product.frame) {
+      price += product.frame.retailPrice;
+    }
 
     return price;
   }
