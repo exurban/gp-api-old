@@ -45,6 +45,10 @@ export default class Frame extends BaseEntity {
 
   @Field()
   @Column()
+  sortIndex: number;
+
+  @Field()
+  @Column()
   printType: string;
 
   @Field(() => Image, {

@@ -36,6 +36,9 @@ class AddFrameInput {
   @Field()
   color: string;
 
+  @Field({ nullable: true })
+  sortIndex?: number;
+
   @Field()
   printType: string;
 
@@ -83,6 +86,9 @@ class UpdateFrameInput {
 
   @Field({ nullable: true })
   printType?: string;
+
+  @Field({ nullable: true })
+  sortIndex?: number;
 
   @Field({ nullable: true })
   coverImageId?: number;
