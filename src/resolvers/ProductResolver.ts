@@ -94,10 +94,10 @@ export default class ProductResolver {
     //     price = product.photo.retailPrice30;
     // }
 
-    const price = 120;
-
     console.log(`product's mat is ${product.mat}`);
-    // price += product.print.retailPrice;
+
+    let price = 120;
+    price += product.print.retailPrice;
 
     // if (product.mat) {
     //   price += product.mat.retailPrice;
