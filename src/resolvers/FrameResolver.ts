@@ -2,6 +2,7 @@ import {
   Arg,
   Authorized,
   Field,
+  FieldResolver,
   Float,
   InputType,
   Int,
@@ -9,6 +10,7 @@ import {
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
@@ -140,6 +142,11 @@ export default class FrameResolver {
     @InjectRepository(Image)
     private imageRepository: Repository<Image>
   ) {}
+
+  @FieldResolver()
+  retailPrice(@Root() frame: Frame) {
+    return frame.basePrice * frame.priceModifier;
+  }
 
   // * Queries - Print + Cover Image Only
   @Query(() => SearchFramesResponse, {

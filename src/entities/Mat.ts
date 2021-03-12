@@ -84,6 +84,9 @@ export default class Mat extends BaseEntity {
   @Column("float", { default: 1.0 })
   priceModifier: number;
 
+  @Field(() => Float)
+  retailPrice: number;
+
   @Field()
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
