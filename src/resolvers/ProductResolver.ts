@@ -96,6 +96,7 @@ export default class ProductResolver {
 
     const price = 120;
 
+    console.log(`product's mat is ${product.mat}`);
     // price += product.print.retailPrice;
 
     // if (product.mat) {
