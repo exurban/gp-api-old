@@ -94,17 +94,17 @@ export default class ProductResolver {
     //     price = product.photo.retailPrice30;
     // }
 
-    let price = 120;
+    const price = 120;
 
-    price += product.print.retailPrice;
+    // price += product.print.retailPrice;
 
-    if (product.mat) {
-      price += product.mat.retailPrice;
-    }
+    // if (product.mat) {
+    //   price += product.mat.retailPrice;
+    // }
 
-    if (product.frame) {
-      price += product.frame.retailPrice;
-    }
+    // if (product.frame) {
+    //   price += product.frame.retailPrice;
+    // }
 
     return price;
   }
