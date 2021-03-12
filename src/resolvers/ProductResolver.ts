@@ -93,7 +93,7 @@ export default class ProductResolver {
 
   //* Mutations
   @Mutation(() => AddProductResponse)
-  async addPrint(
+  async addProduct(
     @Arg("input", () => AddProductInput) input: AddProductInput
   ): Promise<AddProductResponse> {
     const photo = await this.photoRepository.findOne(input.photoId);
@@ -151,7 +151,7 @@ export default class ProductResolver {
   }
 
   @Mutation(() => UpdateProductResponse)
-  async updatePrint(
+  async updateProduct(
     @Arg("id", () => Int) id: number,
     @Arg("input", () => UpdateProductInput) input: UpdateProductInput
   ): Promise<UpdateProductResponse> {
