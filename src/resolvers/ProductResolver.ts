@@ -6,6 +6,7 @@ import {
   Int,
   Mutation,
   ObjectType,
+  Query,
   Resolver,
   Root,
 } from "type-graphql";
@@ -73,41 +74,60 @@ export default class ProductResolver {
   ) {}
 
   @FieldResolver()
-  totalRetailPrice(@Root() product: Product) {
-    // let price;
-    // const dimension1 = product.print.dimension1;
+  async totalRetailPrice(@Root() product: Product) {
+    const dim1 = product.print.dimension1;
 
-    // switch (dimension1) {
-    //   case 12:
-    //     price = product.photo.retailPrice12;
-    //     break;
-    //   case 16:
-    //     price = product.photo.retailPrice16;
-    //     break;
-    //   case 20:
-    //     price = product.photo.retailPrice20;
-    //     break;
-    //   case 24:
-    //     price = product.photo.retailPrice24;
-    //     break;
-    //   default:
-    //     price = product.photo.retailPrice30;
-    // }
+    let price;
 
-    console.log(`product's mat is ${product.mat}`);
+    switch (dim1) {
+      case 12:
+        price = product.photo.basePrice12 * product.photo.priceModifier12;
+        break;
+      case 16:
+        price = product.photo.basePrice16 * product.photo.priceModifier16;
+        break;
+      case 20:
+        price = product.photo.basePrice20 * product.photo.priceModifier20;
+        break;
+      case 24:
+        price = product.photo.basePrice24 * product.photo.priceModifier24;
+        break;
+      default:
+        price = product.photo.basePrice30 * product.photo.priceModifier30;
+        break;
+    }
 
-    let price = 120;
-    price += product.print.retailPrice;
+    price += product.print.basePrice * product.print.priceModifier;
 
-    // if (product.mat) {
-    //   price += product.mat.retailPrice;
-    // }
+    if (product.mat) {
+      price += product.mat.basePrice * product.mat.priceModifier;
+      console.log(`mat: ${product.mat.basePrice * product.mat.priceModifier}`);
+    }
 
-    // if (product.frame) {
-    //   price += product.frame.retailPrice;
-    // }
+    if (product.frame) {
+      price += product.frame.basePrice * product.frame.priceModifier;
+      console.log(
+        `frame: ${product.frame.basePrice * product.frame.priceModifier}`
+      );
+    }
 
     return price;
+  }
+
+  @Query(() => Product, { nullable: true })
+  async product(
+    @Arg("id", () => Int) id: number
+  ): Promise<Product | undefined> {
+    const product = await this.productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.photo", "p")
+      .leftJoinAndSelect("product.print", "pr")
+      .leftJoinAndSelect("product.mat", "m")
+      .leftJoinAndSelect("product.frame", "fr")
+      .where("product.id = :id", { id: id })
+      .getOne();
+
+    return product;
   }
 
   //* Mutations

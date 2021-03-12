@@ -215,7 +215,7 @@ type Frame {
   description: String
   material: String!
   color: String!
-  sortIndex: Float!
+  sortIndex: Float
   printType: String!
 
   # Optional. An image of the frame.
@@ -1270,6 +1270,7 @@ type Query {
   # Search Prints. Returns Print + Cover Image.
   searchPrints(input: SearchPrintsInput!): SearchPrintsResponse!
   print(id: Int!): Print!
+  product(id: Int!): Product
   userSearch(phrase: String!): [UserSearchResult!]!
 
   # Returns all Subjects + cover images. Sortable and filterable.
