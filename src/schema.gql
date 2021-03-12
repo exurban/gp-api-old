@@ -215,7 +215,7 @@ type Frame {
   description: String
   material: String!
   color: String!
-  sortIndex: Float
+  sortIndex: Float!
   printType: String!
 
   # Optional. An image of the frame.
@@ -1330,9 +1330,11 @@ type Mutation {
   addPhoto(input: AddPhotoInput!): AddPhotoResponse!
   updatePhoto(input: UpdatePhotoInput!, id: Int!): UpdatePhotoResponse!
   deletePhoto(id: Int!): Boolean!
-  addPrint(input: AddProductInput!): AddProductResponse!
-  updatePrint(input: UpdateProductInput!, id: Int!): UpdateProductResponse!
+  addPrint(input: AddPrintInput!): AddPrintResponse!
+  updatePrint(input: UpdatePrintInput!, id: Int!): UpdatePrintResponse!
   deletePrint(id: Int!): Boolean!
+  addProduct(input: AddProductInput!): AddProductResponse!
+  updateProduct(input: UpdateProductInput!, id: Int!): UpdateProductResponse!
   deleteProduct(id: Int!): SuccessMessageResponse!
   addSubject(input: AddSubjectInput!): AddSubjectResponse!
   updateSubject(input: UpdateSubjectInput!, id: Int!): UpdateSubjectResponse!
