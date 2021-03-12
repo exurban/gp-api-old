@@ -121,9 +121,12 @@ export default class ProductResolver {
     const product = await this.productRepository
       .createQueryBuilder("product")
       .leftJoinAndSelect("product.photo", "p")
+      .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("product.print", "pr")
       .leftJoinAndSelect("product.mat", "m")
+      .leftJoinAndSelect("m.coverImage", "mci")
       .leftJoinAndSelect("product.frame", "fr")
+      .leftJoinAndSelect("fr.coverImage", "frci")
       .where("product.id = :id", { id: id })
       .getOne();
 
