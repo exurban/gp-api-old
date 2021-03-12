@@ -45,8 +45,8 @@ export default class Frame extends BaseEntity {
   @Column()
   color: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
+  @Field()
+  @Column()
   sortIndex: number;
 
   @Field()
