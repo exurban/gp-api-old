@@ -22,32 +22,32 @@ import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
 //* Input Types
 @InputType()
 class AddProductInput {
-  @Field()
-  photo: Photo;
+  @Field(() => Int)
+  photoId: number;
 
-  @Field()
-  print: Print;
+  @Field(() => Int)
+  printId: number;
 
-  @Field({ nullable: true })
-  mat?: Mat;
+  @Field(() => Int, { nullable: true })
+  matId?: number;
 
-  @Field({ nullable: true })
-  frame?: Frame;
+  @Field(() => Int, { nullable: true })
+  frameId?: number;
 }
 
 @InputType()
 class UpdateProductInput {
-  @Field({ nullable: true })
-  photo?: Photo;
+  @Field(() => Int, { nullable: true })
+  photoId?: number;
 
-  @Field({ nullable: true })
-  print?: Print;
+  @Field(() => Int, { nullable: true })
+  printId?: number;
 
-  @Field({ nullable: true })
-  mat?: Mat;
+  @Field(() => Int, { nullable: true })
+  matId?: number;
 
-  @Field({ nullable: true })
-  frame?: Frame;
+  @Field(() => Int, { nullable: true })
+  frameId?: number;
 }
 
 @ObjectType()
@@ -65,7 +65,11 @@ class UpdateProductResponse extends SuccessMessageResponse {
 @Resolver(() => Product)
 export default class ProductResolver {
   constructor(
-    @InjectRepository(Product) private productRepository: Repository<Product>
+    @InjectRepository(Product) private productRepository: Repository<Product>,
+    @InjectRepository(Photo) private photoRepository: Repository<Photo>,
+    @InjectRepository(Print) private printRepository: Repository<Print>,
+    @InjectRepository(Mat) private matRepository: Repository<Mat>,
+    @InjectRepository(Frame) private frameRepository: Repository<Frame>
   ) {}
 
   @FieldResolver()
@@ -73,11 +77,18 @@ export default class ProductResolver {
     // const dimension1 = product.print.dimension1;
 
     // ! update to get correct imageSize price from photo
-    return (
-      product.photo.retailPrice12 +
-      product.mat.retailPrice +
-      product.frame.retailPrice
-    );
+
+    let price = product.photo.retailPrice12 + product.print.retailPrice;
+
+    if (product.mat) {
+      price += product.mat.retailPrice;
+    }
+
+    if (product.frame) {
+      price += product.frame.retailPrice;
+    }
+
+    return price;
   }
 
   //* Mutations
@@ -85,11 +96,48 @@ export default class ProductResolver {
   async addPrint(
     @Arg("input", () => AddProductInput) input: AddProductInput
   ): Promise<AddProductResponse> {
+    const photo = await this.photoRepository.findOne(input.photoId);
+    if (!photo) {
+      return {
+        success: false,
+        message: `Failed to find photo with id ${input.photoId}`,
+      };
+    }
+
+    const print = await this.printRepository.findOne(input.printId);
+    if (!print) {
+      return {
+        success: false,
+        message: `Failed to find print with id ${input.printId}`,
+      };
+    }
+
+    let mat, frame;
+    if (input.matId) {
+      mat = await this.matRepository.findOne(input.matId);
+      if (!mat) {
+        return {
+          success: false,
+          message: `Failed to find mat with id ${input.matId}`,
+        };
+      }
+    }
+
+    if (input.frameId) {
+      frame = await this.frameRepository.findOne(input.frameId);
+      if (!frame) {
+        return {
+          success: false,
+          message: `Failed to find frame with id ${input.frameId}`,
+        };
+      }
+    }
+
     const newProduct = await this.productRepository.create({
-      photo: input.photo,
-      print: input.print,
-      mat: input.mat,
-      frame: input.frame,
+      photo: photo,
+      print: print,
+      mat: mat,
+      frame: frame,
     });
 
     await this.productRepository.insert(newProduct);
@@ -107,17 +155,61 @@ export default class ProductResolver {
     @Arg("id", () => Int) id: number,
     @Arg("input", () => UpdateProductInput) input: UpdateProductInput
   ): Promise<UpdateProductResponse> {
-    const product = await this.productRepository.findOne({ id });
+    const product = await this.productRepository.findOne(id);
+
     if (!product) {
       return {
         success: false,
-        message: `Couldn't find product with id: ${id}`,
+        message: `Product with id ${id} does not exist.`,
       };
     }
 
-    const updatedProduct = { ...product, ...input };
+    let photo, print, mat, frame;
 
-    const pr = await this.productRepository.save(updatedProduct);
+    if (input.photoId) {
+      photo = await this.photoRepository.findOne({ id: input.photoId });
+      if (!photo) {
+        return {
+          success: false,
+          message: `Failed to find photo with id ${input.photoId}`,
+        };
+      }
+      product.photo = photo;
+    }
+
+    if (input.printId) {
+      print = await this.printRepository.findOne({ id: input.printId });
+      if (!print) {
+        return {
+          success: false,
+          message: `Failed to find print with id ${input.printId}`,
+        };
+      }
+      product.print = print;
+    }
+
+    if (input.matId) {
+      mat = await this.matRepository.findOne({ id: input.matId });
+      if (!mat) {
+        return {
+          success: false,
+          message: `Failed to find mat with id ${input.matId}`,
+        };
+      }
+      product.mat = mat;
+    }
+
+    if (input.frameId) {
+      frame = await this.frameRepository.findOne({ id: input.frameId });
+      if (!frame) {
+        return {
+          success: false,
+          message: `Failed to find frame with id ${input.frameId}`,
+        };
+      }
+      product.frame = frame;
+    }
+    const pr = await this.productRepository.save(product);
 
     return {
       success: true,

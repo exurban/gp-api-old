@@ -1,10 +1,11 @@
 import { Field, Float, ID, ObjectType } from "type-graphql";
 import {
   BaseEntity,
-  Column,
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -21,21 +22,29 @@ export default class Product extends BaseEntity {
   @PrimaryGeneratedColumn()
   readonly id: number;
 
-  @Field()
-  @Column()
+  @Field(() => Photo)
+  @ManyToOne(() => Photo, (photo) => photo.products)
+  @JoinColumn()
   photo: Photo;
 
-  @Field()
-  @Column()
+  @Field(() => Print)
+  @ManyToOne(() => Print, (print) => print.products)
+  @JoinColumn()
   print: Print;
 
-  @Field()
-  @Column()
-  mat: Mat;
+  @Field(() => Mat, { nullable: true })
+  @ManyToOne(() => Mat, (mat) => mat.products, {
+    nullable: true,
+  })
+  @JoinColumn()
+  mat?: Mat;
 
-  @Field()
-  @Column()
-  frame: Frame;
+  @Field(() => Frame, { nullable: true })
+  @ManyToOne(() => Frame, (frame) => frame.products, {
+    nullable: true,
+  })
+  @JoinColumn()
+  frame?: Frame;
 
   @Field(() => Float)
   totalRetailPrice: number;

@@ -11,8 +11,10 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany,
 } from "typeorm";
 import Image from "./Image";
+import Product from "./Product";
 
 @ObjectType()
 @Entity({ name: "mats" })
@@ -86,6 +88,10 @@ export default class Mat extends BaseEntity {
 
   @Field(() => Float)
   retailPrice: number;
+
+  @Field(() => [Product], { nullable: true })
+  @OneToMany(() => Product, (product) => product.mat, { nullable: true })
+  products?: Product[];
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

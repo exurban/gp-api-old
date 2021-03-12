@@ -162,6 +162,89 @@ type UserShoppingBagItem {
   photo: Photo!
 }
 
+type Print {
+  id: ID!
+  name: String!
+  description: String
+  type: String!
+
+  # Optional. An image of the print.
+  coverImage: Image
+  printSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+  retailPrice: Float!
+  products: [Product!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Mat {
+  id: ID!
+  name: String!
+  displayName: String!
+  description: String
+  color: String!
+  printType: String!
+
+  # Optional. An image of the mat.
+  coverImage: Image
+  matSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+  retailPrice: Float!
+  products: [Product!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Frame {
+  id: ID!
+  name: String!
+  displayName: String!
+  description: String
+  material: String!
+  color: String!
+  sortIndex: Float
+  printType: String!
+
+  # Optional. An image of the frame.
+  coverImage: Image
+  frameSku: String!
+  aspectRatio: String!
+  dimension1: Float!
+  dimension2: Float!
+  cost: Float!
+  shippingCost: Float!
+  basePrice: Float!
+  priceModifier: Float!
+  retailPrice: Float!
+  products: [Product!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Product {
+  id: ID!
+  photo: Photo!
+  print: Print!
+  mat: Mat
+  frame: Frame
+  totalRetailPrice: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type Photo {
   id: ID!
   skuGenerator: Int!
@@ -200,6 +283,7 @@ type Photo {
   collectionsForPhoto: [PhotoCollection!]
   favoritedByUsers: [UserFavorite!]
   inShoppingBagsOfUsers: [UserShoppingBagItem!]
+  products: [Product!]
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -250,29 +334,6 @@ type AllPhotosInCollectionResponse {
   collectionInfo: Collection!
   total: Int!
   photos: [Photo!]!
-}
-
-type Frame {
-  id: ID!
-  name: String!
-  displayName: String!
-  description: String
-  material: String!
-  color: String!
-  printType: String!
-
-  # Optional. An image of the frame.
-  coverImage: Image
-  frameSku: String!
-  aspectRatio: String!
-  dimension1: Float!
-  dimension2: Float!
-  cost: Float!
-  shippingCost: Float!
-  basePrice: Float!
-  priceModifier: Float!
-  createdAt: DateTime!
-  updatedAt: DateTime!
 }
 
 type SearchFramesResponse {
@@ -346,28 +407,6 @@ type UpdateLocationResponse {
   updatedLocation: Location
 }
 
-type Mat {
-  id: ID!
-  name: String!
-  displayName: String!
-  description: String
-  color: String!
-  printType: String!
-
-  # Optional. An image of the mat.
-  coverImage: Image
-  matSku: String!
-  aspectRatio: String!
-  dimension1: Float!
-  dimension2: Float!
-  cost: Float!
-  shippingCost: Float!
-  basePrice: Float!
-  priceModifier: Float!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
 type SearchMatsResponse {
   datalist: [Mat!]!
 }
@@ -391,27 +430,6 @@ type ItemCountList {
 type ItemCount {
   name: String
   count: Int!
-}
-
-type Print {
-  id: ID!
-  name: String!
-  description: String
-  type: String!
-
-  # Optional. An image of the print.
-  coverImage: Image
-  printSku: String!
-  aspectRatio: String!
-  dimension1: Float!
-  dimension2: Float!
-  cost: Float!
-  shippingCost: Float!
-  basePrice: Float!
-  priceModifier: Float!
-  retailPrice: Float!
-  createdAt: DateTime!
-  updatedAt: DateTime!
 }
 
 type PrintsResponse {
@@ -567,6 +585,18 @@ type UpdatePrintResponse {
   updatedPrint: Print
 }
 
+type AddProductResponse {
+  success: Boolean!
+  message: String!
+  newProduct: Product
+}
+
+type UpdateProductResponse {
+  success: Boolean!
+  message: String!
+  updatedProduct: Product
+}
+
 type SubjectsResponse {
   subjects: [Subject!]!
 }
@@ -719,6 +749,7 @@ input AddFrameInput {
   description: String
   material: String!
   color: String!
+  sortIndex: Float
   printType: String!
   coverImageId: Float
   frameSku: String!
@@ -737,6 +768,7 @@ input UpdateFrameInput {
   material: String
   color: String
   printType: String
+  sortIndex: Float
   coverImageId: Float
   frameSku: String
   dimension1: Float
@@ -1049,6 +1081,20 @@ input SearchPrintsInput {
   searchString: String!
 }
 
+input AddProductInput {
+  photoId: Int!
+  printId: Int!
+  matId: Int
+  frameId: Int
+}
+
+input UpdateProductInput {
+  photoId: Int
+  printId: Int
+  matId: Int
+  frameId: Int
+}
+
 # Inputs to create a new Subject entity.
 input AddSubjectInput {
   # Name of the subject. Used in Photo Info links.
@@ -1284,9 +1330,10 @@ type Mutation {
   addPhoto(input: AddPhotoInput!): AddPhotoResponse!
   updatePhoto(input: UpdatePhotoInput!, id: Int!): UpdatePhotoResponse!
   deletePhoto(id: Int!): Boolean!
-  addPrint(input: AddPrintInput!): AddPrintResponse!
-  updatePrint(input: UpdatePrintInput!, id: Int!): UpdatePrintResponse!
+  addPrint(input: AddProductInput!): AddProductResponse!
+  updatePrint(input: UpdateProductInput!, id: Int!): UpdateProductResponse!
   deletePrint(id: Int!): Boolean!
+  deleteProduct(id: Int!): SuccessMessageResponse!
   addSubject(input: AddSubjectInput!): AddSubjectResponse!
   updateSubject(input: UpdateSubjectInput!, id: Int!): UpdateSubjectResponse!
   deleteSubject(id: Int!): Boolean!

@@ -11,8 +11,10 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany,
 } from "typeorm";
 import Image from "./Image";
+import Product from "./Product";
 
 @ObjectType()
 @Entity({ name: "frames" })
@@ -43,8 +45,8 @@ export default class Frame extends BaseEntity {
   @Column()
   color: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   sortIndex: number;
 
   @Field()
@@ -94,6 +96,10 @@ export default class Frame extends BaseEntity {
 
   @Field(() => Float)
   retailPrice: number;
+
+  @Field(() => [Product], { nullable: true })
+  @OneToMany(() => Product, (product) => product.frame, { nullable: true })
+  products?: Product[];
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

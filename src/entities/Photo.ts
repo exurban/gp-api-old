@@ -25,6 +25,7 @@ import PhotoSubject from "./PhotoSubject";
 import PhotoTag from "./PhotoTag";
 import UserFavorite from "./UserFavorite";
 import UserShoppingBagItem from "./UserShoppingBagItem";
+import Product from "./Product";
 
 @ObjectType()
 @Entity({ name: "photos" })
@@ -178,6 +179,10 @@ export default class Photo extends BaseEntity {
   @Field(() => [UserShoppingBagItem], { nullable: true })
   @OneToMany(() => UserShoppingBagItem, (sb) => sb.photo)
   inShoppingBagsOfUsers: UserShoppingBagItem[];
+
+  @Field(() => [Product], { nullable: true })
+  @OneToMany(() => Product, (product) => product.photo)
+  products?: Product[];
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })
