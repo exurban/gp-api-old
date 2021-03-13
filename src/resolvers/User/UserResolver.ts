@@ -18,7 +18,7 @@ dotenv.config();
 
 import User from "../../entities/User";
 import UserFavorite from "../../entities/UserFavorite";
-import UserShoppingBagItem from "../../entities/UserShoppingBagItem";
+import Product from "../../entities/Product";
 
 interface Context {
   user: User;
@@ -37,9 +37,8 @@ class GetApiTokenInput {
 class UserPreferencesResponse {
   @Field(() => [UserFavorite], { nullable: true })
   favorites?: UserFavorite[];
-
-  @Field(() => [UserShoppingBagItem], { nullable: true })
-  shoppingBagItems?: UserShoppingBagItem[];
+  @Field(() => [Product], { nullable: true })
+  shoppingBagItems?: Product[];
 }
 
 @Resolver(() => User)
@@ -49,8 +48,7 @@ export default class UserResolver {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(UserFavorite)
     private userFavoriteRepository: Repository<UserFavorite>,
-    @InjectRepository(UserShoppingBagItem)
-    private userShoppingBagRepository: Repository<UserShoppingBagItem>
+    @InjectRepository(Product) private productRepository: Repository<Product>
   ) {}
 
   //* Queries
@@ -116,6 +114,13 @@ export default class UserResolver {
   }
 
   @Authorized("USER")
+  @Query(() => Int)
+  async me(@Ctx() context: Context): Promise<number> {
+    const userId = context.user.id;
+    return userId;
+  }
+
+  @Authorized("USER")
   @Query(() => UserPreferencesResponse)
   async getUserPreferences(
     @Ctx() context: Context
@@ -139,19 +144,15 @@ export default class UserResolver {
       .getMany();
 
     // get photoIds in bag
-    const userShoppingBagItems = await this.userShoppingBagRepository
-      .createQueryBuilder("usbi")
-      .leftJoinAndSelect("usbi.photo", "p")
+    const userShoppingBagItems = await this.productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.photo", "p")
       .leftJoinAndSelect("p.images", "i")
-      .leftJoinAndSelect("p.photographer", "pg")
-      .leftJoinAndSelect("p.location", "l")
-      .leftJoinAndSelect("p.subjectsInPhoto", "ps")
-      .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
-      .leftJoinAndSelect("p.tagsForPhoto", "pt")
-      .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
-      .leftJoinAndSelect("p.collectionsForPhoto", "pc")
-      .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
-      .where("usbi.userId = :userId", { userId: userId })
+      .leftJoinAndSelect("product.print", "pr")
+      .leftJoinAndSelect("product.mat", "m")
+      .leftJoinAndSelect("product.frame", "fr")
+
+      .where("product.userId = :userId", { userId: userId })
       .getMany();
 
     return {

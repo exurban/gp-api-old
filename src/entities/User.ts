@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 import UserFavorite from "./UserFavorite";
-import UserShoppingBagItem from "./UserShoppingBagItem";
+import Product from "./Product";
 
 @ObjectType()
 @Entity({ name: "users" })
@@ -55,9 +55,11 @@ export default class User extends BaseEntity {
   @OneToMany(() => UserFavorite, (fav) => fav.user)
   userFavorites: Promise<UserFavorite[]>;
 
-  @Field(() => [UserShoppingBagItem])
-  @OneToMany(() => UserShoppingBagItem, (sb) => sb.user)
-  userShoppingBagItems: Promise<UserShoppingBagItem[]>;
+  @Field(() => [Product], { nullable: true })
+  @OneToMany(() => Product, (product) => product.shoppingBag, {
+    nullable: true,
+  })
+  shoppingBagItems?: Product[];
 
   @Field()
   @CreateDateColumn({ type: "timestamptz" })

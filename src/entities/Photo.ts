@@ -24,7 +24,6 @@ import Photographer from "./Photographer";
 import PhotoSubject from "./PhotoSubject";
 import PhotoTag from "./PhotoTag";
 import UserFavorite from "./UserFavorite";
-import UserShoppingBagItem from "./UserShoppingBagItem";
 import Product from "./Product";
 
 @ObjectType()
@@ -175,10 +174,6 @@ export default class Photo extends BaseEntity {
   @Field(() => [UserFavorite], { nullable: true })
   @OneToMany(() => UserFavorite, (fav) => fav.photo)
   favoritedByUsers: Promise<UserFavorite[]>;
-
-  @Field(() => [UserShoppingBagItem], { nullable: true })
-  @OneToMany(() => UserShoppingBagItem, (sb) => sb.photo)
-  inShoppingBagsOfUsers: UserShoppingBagItem[];
 
   @Field(() => [Product], { nullable: true })
   @OneToMany(() => Product, (product) => product.photo)

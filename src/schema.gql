@@ -155,13 +155,6 @@ type PhotoTag {
   photo: Photo!
 }
 
-type UserShoppingBagItem {
-  userId: User!
-  user: User!
-  photoId: Photo!
-  photo: Photo!
-}
-
 type Print {
   id: ID!
   name: String!
@@ -240,6 +233,7 @@ type Product {
   print: Print!
   mat: Mat
   frame: Frame
+  shoppingBag: User
   totalRetailPrice: Float!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -282,7 +276,6 @@ type Photo {
   tagsForPhoto: [PhotoTag!]
   collectionsForPhoto: [PhotoCollection!]
   favoritedByUsers: [UserFavorite!]
-  inShoppingBagsOfUsers: [UserShoppingBagItem!]
   products: [Product!]
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -304,7 +297,7 @@ type User {
   roles: [String!]!
   isSubscribed: Boolean!
   userFavorites: [UserFavorite!]!
-  userShoppingBagItems: [UserShoppingBagItem!]!
+  shoppingBagItems: [Product!]
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -685,25 +678,25 @@ type RemovePhotoFromFavoritesResponse {
 }
 
 type ShoppingBagItemsResponse {
-  # Returns list of Photo objects in user's shopping bag.
-  photoList: [Photo!]
+  # Returns list of Products in user's shopping bag.
+  dataList: [Product!]
 }
 
-type AddPhotoToShoppingBagResponse {
+type AddProductToShoppingBagResponse {
   success: Boolean!
   message: String!
-  addedPhotoWithId: ID
+  addedProduct: Product
 }
 
-type RemovePhotoFromShoppingBagResponse {
+type RemoveProductFromShoppingBagResponse {
   success: Boolean!
   message: String!
-  removedPhotoWithId: ID
+  removedProduct: Product
 }
 
 type UserPreferencesResponse {
   favorites: [UserFavorite!]
-  shoppingBagItems: [UserShoppingBagItem!]
+  shoppingBagItems: [Product!]
 }
 
 # Inputs to create a new Collection.
@@ -1294,13 +1287,12 @@ type Query {
 
   # Returns all Photos favorited by the signed in User.
   favorites: FavoritesResponse!
-
-  # Returns all Photos in the shopping bag of the signed in User.
   shoppingBagItems: ShoppingBagItemsResponse!
   users: [User!]!
   user(id: Int!): User!
   userSummaries: [User!]!
   newsletterSubscribers: [User!]!
+  me: Int!
   getUserPreferences: UserPreferencesResponse!
 }
 
@@ -1347,7 +1339,7 @@ type Mutation {
   deleteTag(id: Int!): Boolean!
   addPhotoToFavorites(photoId: Float!): AddPhotoToFavoritesResponse!
   removePhotoFromFavorites(photoId: Float!): RemovePhotoFromFavoritesResponse!
-  addPhotoToShoppingBag(photoId: Float!): AddPhotoToShoppingBagResponse!
-  removePhotoFromShoppingBag(photoId: Float!): RemovePhotoFromShoppingBagResponse!
+  addProductToShoppingBag(productId: Float!): AddProductToShoppingBagResponse!
+  removeProductFromShoppingBag(productId: Float!): RemoveProductFromShoppingBagResponse!
   getApiToken(input: GetApiTokenInput!): String!
 }

@@ -138,7 +138,9 @@ export default class ProductResolver {
   async addProduct(
     @Arg("input", () => AddProductInput) input: AddProductInput
   ): Promise<AddProductResponse> {
-    const photo = await this.photoRepository.findOne(input.photoId);
+    const photo = await this.photoRepository.findOne(input.photoId, {
+      relations: ["images"],
+    });
     if (!photo) {
       return {
         success: false,
@@ -187,7 +189,7 @@ export default class ProductResolver {
 
     return {
       success: true,
-      message: `Successfully added item to your shopping bag.`,
+      message: `Successfully created new product.`,
       newProduct: newProduct,
     };
   }

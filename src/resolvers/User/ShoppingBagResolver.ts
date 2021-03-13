@@ -1,13 +1,12 @@
 import User from "../../entities/User";
-import UserShoppingBagItem from "../../entities/UserShoppingBagItem";
-import Photo from "../../entities/Photo";
+import Product from "../../entities/Product";
+
 import SuccessMessageResponse from "../../abstract/SuccessMessageResponse";
 import {
   Arg,
   Authorized,
   Ctx,
   Field,
-  ID,
   Mutation,
   ObjectType,
   Query,
@@ -22,23 +21,23 @@ interface Context {
 
 @ObjectType()
 class ShoppingBagItemsResponse {
-  @Field(() => [Photo], {
+  @Field(() => [Product], {
     nullable: true,
-    description: "Returns list of Photo objects in user's shopping bag.",
+    description: "Returns list of Products in user's shopping bag.",
   })
-  photoList?: Photo[];
+  dataList?: Product[];
 }
 
 @ObjectType()
-class AddPhotoToShoppingBagResponse extends SuccessMessageResponse {
-  @Field(() => ID, { nullable: true })
-  addedPhotoWithId?: number;
+class AddProductToShoppingBagResponse extends SuccessMessageResponse {
+  @Field(() => Product, { nullable: true })
+  addedProduct?: Product;
 }
 
 @ObjectType()
-class RemovePhotoFromShoppingBagResponse extends SuccessMessageResponse {
-  @Field(() => ID, { nullable: true })
-  removedPhotoWithId?: number;
+class RemoveProductFromShoppingBagResponse extends SuccessMessageResponse {
+  @Field(() => Product, { nullable: true })
+  removedProduct?: Product;
 }
 
 @Resolver(() => User)
@@ -46,73 +45,63 @@ export default class UserResolver {
   //* Repositories
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(Photo) private photoRepository: Repository<Photo>,
-    @InjectRepository(UserShoppingBagItem)
-    private userShoppingBagRepository: Repository<UserShoppingBagItem>
+    @InjectRepository(Product) private productRepository: Repository<Product>
   ) {}
 
   // * GET SHOPPING BAG ITEMS
   @Authorized("USER")
-  @Query(() => ShoppingBagItemsResponse, {
-    description:
-      "Returns all Photos in the shopping bag of the signed in User.",
-  })
+  @Query(() => ShoppingBagItemsResponse)
   async shoppingBagItems(
     @Ctx() context: Context
   ): Promise<ShoppingBagItemsResponse> {
     const userId = context.user.id;
 
-    const shoppingBagItems = await this.userShoppingBagRepository.find({
-      where: { userId: userId },
+    const shoppingBagItems = await this.productRepository.find({
+      where: { shoppingBag: userId },
     });
 
-    const photoIds = shoppingBagItems?.map((x) => x.photoId);
-    let photos;
+    const productIds = shoppingBagItems?.map((x) => x.id);
+    console.log(`retrieved shopping bag items: ${productIds}`);
+    let products;
 
-    if (photoIds.length > 0) {
-      photos = await this.photoRepository
-        .createQueryBuilder("p")
+    if (productIds.length > 0) {
+      products = await this.productRepository
+        .createQueryBuilder("pr")
+        .leftJoinAndSelect("pr.photo", "p")
         .leftJoinAndSelect("p.images", "i")
-        .leftJoinAndSelect("p.photographer", "pg")
-        .leftJoinAndSelect("p.location", "l")
-        .leftJoinAndSelect("p.subjectsInPhoto", "ps")
-        .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
-        .leftJoinAndSelect("p.tagsForPhoto", "pt")
-        .leftJoinAndSelect("pt.tag", "t", "pt.tagId = t.id")
-        .leftJoinAndSelect("p.collectionsForPhoto", "pc")
-        .leftJoinAndSelect("pc.collection", "c", "pc.collectionId = c.id")
-        .where("p.id IN (:...photoIds)", { photoIds: photoIds })
+        .leftJoinAndSelect("pr.print", "print")
+        .leftJoinAndSelect("pr.mat", "m")
+        .leftJoinAndSelect("pr.frame", "fr")
+        .where("pr.id IN (:...productIds)", { productIds: productIds })
         .getMany();
     }
 
-    return { photoList: photos };
+    return { dataList: products };
   }
 
   // * Add
   @Authorized("USER")
-  @Mutation(() => AddPhotoToShoppingBagResponse)
-  async addPhotoToShoppingBag(
+  @Mutation(() => AddProductToShoppingBagResponse)
+  async addProductToShoppingBag(
     @Ctx() context: Context,
-    @Arg("photoId") photoId: number
-  ): Promise<AddPhotoToShoppingBagResponse> {
+    @Arg("productId") productId: number
+  ): Promise<AddProductToShoppingBagResponse> {
     const userId = context.user.id;
 
     // * Check whether item is already in bag, return if it is
-    const shoppingBagItem = await this.userShoppingBagRepository.findOne({
-      where: { userId: userId, photoId: photoId },
+    const shoppingBagItem = await this.productRepository.findOne({
+      where: { id: productId },
     });
 
-    if (shoppingBagItem) {
+    if (!shoppingBagItem) {
       return {
         success: false,
-        message: `This photo is already in your shopping bag.`,
+        message: `This product does not exist.`,
       };
     }
 
     // * get user & photo
     const user = await this.userRepository.findOne(userId);
-
-    const photo = await this.photoRepository.findOne(photoId);
 
     if (!user) {
       return {
@@ -121,61 +110,72 @@ export default class UserResolver {
       };
     }
 
-    if (!photo) {
-      return {
-        success: false,
-        message: `failed to find photo with id ${photoId}`,
-      };
-    }
+    shoppingBagItem.shoppingBag = user;
+    await this.productRepository.save(shoppingBagItem);
+    console.log(`bag item: ${JSON.stringify(shoppingBagItem, null, 2)}`);
 
-    const newItem = await this.userShoppingBagRepository
-      .create({
-        userId: userId,
-        photoId: photoId,
-      })
-      .save();
-
-    if (newItem) {
-      return {
-        success: true,
-        message: `Added ${photo.title} to your shopping bag.`,
-        addedPhotoWithId: photoId,
-      };
-    }
+    console.log(
+      `shopping bag: ${JSON.stringify(shoppingBagItem.shoppingBag, null, 2)}`
+    );
+    console.log(`user: ${JSON.stringify(user, null, 2)}`);
 
     return {
-      success: false,
-      message: `Failed to add ${photo.title} to your shopping bag.`,
+      success: true,
+      message: `Added product to bag.`,
+      addedProduct: shoppingBagItem,
     };
   }
 
   // * Remove
   @Authorized("USER")
-  @Mutation(() => RemovePhotoFromShoppingBagResponse)
-  async removePhotoFromShoppingBag(
+  @Mutation(() => RemoveProductFromShoppingBagResponse)
+  async removeProductFromShoppingBag(
     @Ctx() context: Context,
-    @Arg("photoId") photoId: number
-  ): Promise<RemovePhotoFromShoppingBagResponse> {
+    @Arg("productId") productId: number
+  ): Promise<RemoveProductFromShoppingBagResponse> {
     const userId = context.user.id;
 
     // * check to see whether UserShoppingBagItem exists
-    const userShoppingBagItem = await this.userShoppingBagRepository.findOne({
-      where: { userId: userId, photoId: photoId },
+    const productToRemove = await this.productRepository.findOne({
+      where: { id: productId },
     });
 
-    if (!userShoppingBagItem) {
+    if (!productToRemove) {
       return {
         success: false,
-        message: `Photo is not in your shopping bag.`,
+        message: `Couldn't find product with id: ${productId}.`,
       };
     }
 
-    await this.userShoppingBagRepository.remove(userShoppingBagItem);
+    const user = await this.userRepository.findOne(userId);
 
-    return {
-      success: true,
-      message: `Successfully removed photo from your shopping bag.`,
-      removedPhotoWithId: photoId,
-    };
+    if (!user) {
+      return {
+        success: false,
+        message: `Couldn't find user with id: ${userId}`,
+      };
+    }
+
+    if (productToRemove.shoppingBag?.id !== user.id) {
+      return {
+        success: false,
+        message: `This proudct is not in your shopping bag.`,
+      };
+    }
+
+    const deleteResult = await this.productRepository.delete({
+      id: productToRemove.id,
+    });
+    if (deleteResult && deleteResult.affected != 0) {
+      return {
+        success: true,
+        message: `Successfully removed product from your shopping bag.`,
+      };
+    } else {
+      return {
+        success: false,
+        message: `Failed to remove product from shopping bag.`,
+      };
+    }
   }
 }
