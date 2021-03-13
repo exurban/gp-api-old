@@ -208,7 +208,7 @@ type Frame {
   description: String
   material: String!
   color: String!
-  sortIndex: Float
+  sortIndex: Float!
   printType: String!
 
   # Optional. An image of the frame.
@@ -688,12 +688,6 @@ type AddProductToShoppingBagResponse {
   addedProduct: Product
 }
 
-type RemoveProductFromShoppingBagResponse {
-  success: Boolean!
-  message: String!
-  removedProduct: Product
-}
-
 type UserPreferencesResponse {
   favorites: [UserFavorite!]
   shoppingBagItems: [Product!]
@@ -742,7 +736,7 @@ input AddFrameInput {
   description: String
   material: String!
   color: String!
-  sortIndex: Float
+  sortIndex: Float!
   printType: String!
   coverImageId: Float
   frameSku: String!
@@ -1340,6 +1334,6 @@ type Mutation {
   addPhotoToFavorites(photoId: Float!): AddPhotoToFavoritesResponse!
   removePhotoFromFavorites(photoId: Float!): RemovePhotoFromFavoritesResponse!
   addProductToShoppingBag(productId: Float!): AddProductToShoppingBagResponse!
-  removeProductFromShoppingBag(productId: Float!): RemoveProductFromShoppingBagResponse!
+  removeProductFromShoppingBag(productId: Float!): SuccessMessageResponse!
   getApiToken(input: GetApiTokenInput!): String!
 }

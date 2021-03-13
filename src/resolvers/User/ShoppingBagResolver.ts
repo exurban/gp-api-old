@@ -34,12 +34,6 @@ class AddProductToShoppingBagResponse extends SuccessMessageResponse {
   addedProduct?: Product;
 }
 
-@ObjectType()
-class RemoveProductFromShoppingBagResponse extends SuccessMessageResponse {
-  @Field(() => Product, { nullable: true })
-  removedProduct?: Product;
-}
-
 @Resolver(() => User)
 export default class UserResolver {
   //* Repositories
@@ -128,11 +122,11 @@ export default class UserResolver {
 
   // * Remove
   @Authorized("USER")
-  @Mutation(() => RemoveProductFromShoppingBagResponse)
+  @Mutation(() => SuccessMessageResponse)
   async removeProductFromShoppingBag(
     @Ctx() context: Context,
     @Arg("productId") productId: number
-  ): Promise<RemoveProductFromShoppingBagResponse> {
+  ): Promise<SuccessMessageResponse> {
     const userId = context.user.id;
 
     // * check to see whether UserShoppingBagItem exists

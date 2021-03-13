@@ -36,8 +36,8 @@ class AddFrameInput {
   @Field()
   color: string;
 
-  @Field({ nullable: true })
-  sortIndex?: number;
+  @Field()
+  sortIndex: number;
 
   @Field()
   printType: string;
