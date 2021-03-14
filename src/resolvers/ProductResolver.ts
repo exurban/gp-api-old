@@ -1,5 +1,6 @@
 import {
   Arg,
+  Ctx,
   Field,
   FieldResolver,
   InputType,
@@ -18,7 +19,12 @@ import Photo from "../entities/Photo";
 import Print from "../entities/Print";
 import Mat from "../entities/Mat";
 import Frame from "../entities/Frame";
+import User from "../entities/User";
 import SuccessMessageResponse from "../abstract/SuccessMessageResponse";
+
+interface Context {
+  user: User;
+}
 
 //* Input Types
 @InputType()
@@ -70,7 +76,8 @@ export default class ProductResolver {
     @InjectRepository(Photo) private photoRepository: Repository<Photo>,
     @InjectRepository(Print) private printRepository: Repository<Print>,
     @InjectRepository(Mat) private matRepository: Repository<Mat>,
-    @InjectRepository(Frame) private frameRepository: Repository<Frame>
+    @InjectRepository(Frame) private frameRepository: Repository<Frame>,
+    @InjectRepository(User) private userRepository: Repository<User>
   ) {}
 
   @FieldResolver()
@@ -101,14 +108,10 @@ export default class ProductResolver {
 
     if (product.mat) {
       price += product.mat.basePrice * product.mat.priceModifier;
-      console.log(`mat: ${product.mat.basePrice * product.mat.priceModifier}`);
     }
 
     if (product.frame) {
       price += product.frame.basePrice * product.frame.priceModifier;
-      console.log(
-        `frame: ${product.frame.basePrice * product.frame.priceModifier}`
-      );
     }
 
     return price;
@@ -136,8 +139,11 @@ export default class ProductResolver {
   //* Mutations
   @Mutation(() => AddProductResponse)
   async addProduct(
+    @Ctx() context: Context,
     @Arg("input", () => AddProductInput) input: AddProductInput
   ): Promise<AddProductResponse> {
+    const userId = context.user.id;
+
     const photo = await this.photoRepository.findOne(input.photoId, {
       relations: ["images"],
     });
@@ -183,6 +189,19 @@ export default class ProductResolver {
       mat: mat,
       frame: frame,
     });
+
+    if (userId) {
+      const user = await this.userRepository.findOne(userId);
+      newProduct.shoppingBag = user;
+
+      await this.productRepository.insert(newProduct);
+      await this.productRepository.save(newProduct);
+
+      return {
+        success: true,
+        message: `Created new product and added to bag.`,
+      };
+    }
 
     await this.productRepository.insert(newProduct);
     await this.productRepository.save(newProduct);
