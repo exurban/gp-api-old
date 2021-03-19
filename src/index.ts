@@ -8,7 +8,6 @@ import { Container } from "typedi";
 import { ConnectionOptions, createConnection, useContainer } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
-import Stripe from "stripe";
 
 // import Account from "./entities/Account";
 import User from "./entities/User";
@@ -120,36 +119,6 @@ const main = async () => {
   });
 
   const app = Express();
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    // https://github.com/stripe/stripe-node#configuration
-    apiVersion: "2020-08-27",
-  });
-
-  app.post("/create-checkout-session", async (_req, res) => {
-    console.log(`request received.`);
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Image, 12 x 18, white mat, black metal frame",
-            },
-            unit_amount: 12000,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: "https://gibbs-photography.com/checkout/success",
-      cancel_url: "https://gibbs-photography.com/checkout/cancel",
-    });
-
-    res.json({ id: session.id });
-  });
 
   // const corsOptions = {
   //   origin: "http://localhost:3000",
