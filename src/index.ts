@@ -127,7 +127,8 @@ const main = async () => {
     apiVersion: "2020-08-27",
   });
 
-  app.post(`/create-checkout-session`, async (_req, res) => {
+  app.post("/create-checkout-session", async (_req, res) => {
+    console.log(`request received.`);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
