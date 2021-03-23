@@ -11,7 +11,7 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { Repository } from "typeorm";
+import { Repository, getRepository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import Location from "../entities/Location";
 import Image from "../entities/Image";
@@ -221,7 +221,7 @@ export default class LocationResolver {
   ): Promise<SearchLocationsResponse> {
     const searchString = input.searchString;
 
-    const locs = await this.locationRepository
+    const locs = await getRepository(Location)
       .createQueryBuilder("loc")
       .leftJoinAndSelect("loc.coverImage", "ci")
       .where("loc.name ilike :searchString", {

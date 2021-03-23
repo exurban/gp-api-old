@@ -5,7 +5,9 @@ import Express from "express";
 import jwt from "jsonwebtoken";
 import { buildSchema } from "type-graphql";
 import { Container } from "typedi";
-import { ConnectionOptions, createConnection, useContainer } from "typeorm";
+import { createConnection, useContainer } from "typeorm";
+// import { ConnectionOptions, createConnection } from "typeorm";
+// import { createConnection } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
@@ -41,51 +43,91 @@ const getUser = async (token: string): Promise<User | undefined> => {
   return undefined;
 };
 
-const getOptions = async () => {
-  console.log(`getting DB options`);
-  const connectionOptions: ConnectionOptions = {
+// const getOptions = async () => {
+//   const connectionOptions: ConnectionOptions = {
+//     type: "postgres",
+//     synchronize: true,
+//     logging: false,
+//     namingStrategy: new SnakeNamingStrategy(),
+//   };
+//   if (process.env.NODE_ENV === "production") {
+//     Object.assign(connectionOptions, {
+//       url: process.env.DATABASE_URL,
+//       entities: ["dist/entities/*{.ts,.js}"],
+//     });
+//   } else {
+//     Object.assign(connectionOptions, {
+//       name: "default",
+//       host: "localhost",
+//       port: 5432,
+//       username: "postgres",
+//       password: "postgres",
+//       database: "photos",
+//       entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+//     });
+//   }
+
+//   return connectionOptions;
+// };
+
+// const connect2Database = async (): Promise<void> => {
+//   console.log(`Connecting to DB`);
+//   const typeormconfig = await getOptions();
+//   await createConnection(typeormconfig);
+// };
+
+// connect2Database().then(async () => {
+//   console.log("Connected to database");
+// });
+
+const connectToRemoteDB = async () => {
+  console.log(`connecting to remote db`);
+  const connection = await createConnection({
     type: "postgres",
     synchronize: true,
     logging: false,
     namingStrategy: new SnakeNamingStrategy(),
-  };
-  if (process.env.NODE_ENV === "production") {
-    Object.assign(connectionOptions, {
-      url: process.env.DATABASE_URL,
-      entities: ["dist/entities/*{.ts,.js}"],
-    });
-  } else {
-    Object.assign(connectionOptions, {
-      name: "default",
-      host: "localhost",
-      port: 5432,
-      username: "postgres",
-      password: "postgres",
-      database: "photos",
-      entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
-    });
+    name: "default",
+    url: process.env.DATABASE_URL,
+    entities: ["dist/entities/*{.ts,.js}"],
+  });
+
+  if (connection) {
+    console.log(`Connected to remote db.`);
   }
-
-  return connectionOptions;
 };
 
-const connect2Database = async (): Promise<void> => {
-  console.log(`Connecting to DB`);
-  const typeormconfig = await getOptions();
-  await createConnection(typeormconfig);
-};
+// const connectToLocalDB = async () => {
+//   console.log(`connecting to local db`);
+//   const connection = await createConnection({
+//     type: "postgres",
+//     synchronize: true,
+//     logging: false,
+//     namingStrategy: new SnakeNamingStrategy(),
+//     name: "default",
+//     host: "localhost",
+//     port: 5432,
+//     username: "postgres",
+//     password: "postgres",
+//     database: "photos",
+//     entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+//   });
 
-connect2Database().then(async () => {
-  console.log("Connected to database");
-});
+//   if (connection) {
+//     console.log(`Connected to local db.`);
+//   }
+// };
 
 const main = async () => {
   // * Connect to Database
   useContainer(Container);
-  // await createConnection();
+
+  // await connectToLocalDB();
+  await connectToRemoteDB();
 
   const schema = await buildSchema({
     resolvers: [__dirname + "/resolvers/**/*.{ts,js}"],
+    // resolvers: [__dirname + "/resolvers/*.{ts,js}"],
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       commentDescriptions: true,
