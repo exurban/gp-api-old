@@ -89,8 +89,11 @@ const connectToRemoteDB = async () => {
     namingStrategy: new SnakeNamingStrategy(),
     name: "default",
     url: process.env.DATABASE_URL,
+    ssl: true,
     extra: {
-      ssl: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     },
     entities: ["dist/entities/*{.ts,.js}"],
   });
