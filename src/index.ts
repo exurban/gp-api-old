@@ -81,7 +81,7 @@ const getUser = async (token: string): Promise<User | undefined> => {
 // });
 
 const connectToRemoteDB = async () => {
-  console.log(`connecting to remote db`);
+  console.log(`connecting to remote at ${process.env.DATABASE_URL}`);
   const connection = await createConnection({
     type: "postgres",
     synchronize: true,
