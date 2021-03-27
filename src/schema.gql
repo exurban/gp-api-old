@@ -270,7 +270,7 @@ type Photo {
   location: Location
   images: [Image!]!
 
-  # A 1,200px x 600px image for sharing.
+  # A 1,200px x 630px image for sharing.
   sharingImage: Image
   subjectsInPhoto: [PhotoSubject!]
   tagsForPhoto: [PhotoTag!]

@@ -57,12 +57,7 @@ export default class UserResolver {
   @Query(() => [User])
   async users(): Promise<User[]> {
     return await this.userRepository.find({
-      relations: [
-        "userFavorites",
-        "userFavorites.photo",
-        "userShoppingBagItems",
-        "userShoppingBagItems.photo",
-      ],
+      relations: ["userFavorites", "userFavorites.photo"],
     });
   }
 

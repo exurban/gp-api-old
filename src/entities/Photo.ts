@@ -152,7 +152,7 @@ export default class Photo extends BaseEntity {
   images: Image[];
 
   @Field(() => Image, {
-    description: "A 1,200px x 600px image for sharing.",
+    description: "A 1,200px x 630px image for sharing.",
     nullable: true,
   })
   @OneToOne(() => Image, { nullable: true })
