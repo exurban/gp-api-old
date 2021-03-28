@@ -97,6 +97,9 @@ class AddPhotoInput {
 
   @Field(() => Int, { nullable: true })
   sharingImageId?: number;
+
+  @Field(() => Int, { nullable: true })
+  emailSharingImageId?: number;
 }
 
 @InputType()
@@ -154,6 +157,9 @@ class UpdatePhotoInput {
 
   @Field(() => Int, { nullable: true })
   sharingImageId?: number;
+
+  @Field(() => Int, { nullable: true })
+  emailSharingImageId?: number;
 
   @Field(() => Int, { nullable: true })
   photographerId?: number;
@@ -343,6 +349,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.sharingImage", "si")
+      .leftJoinAndSelect("p.emailSharingImage", "esi")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -384,6 +391,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.location", "l")
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.sharingImage", "si")
+      .leftJoinAndSelect("p.emailSharingImage", "esi")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
@@ -454,6 +462,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.location", "l")
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.sharingImage", "si")
+        .leftJoinAndSelect("p.emailSharingImage", "esi")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
@@ -501,6 +510,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.sharingImage", "si")
+        .leftJoinAndSelect("p.emailSharingImage", "esi")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -518,6 +528,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.sharingImage", "si")
+        .leftJoinAndSelect("p.emailSharingImage", "esi")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -569,6 +580,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.sharingImage", "si")
+        .leftJoinAndSelect("p.emailSharingImage", "esi")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -587,6 +599,7 @@ export default class PhotoResolver {
         .leftJoinAndSelect("p.photographer", "pg")
         .leftJoinAndSelect("p.images", "i")
         .leftJoinAndSelect("p.sharingImage", "si")
+        .leftJoinAndSelect("p.emailSharingImage", "esi")
         .leftJoinAndSelect("p.subjectsInPhoto", "ps")
         .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
         .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -628,6 +641,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.sharingImage", "si")
+      .leftJoinAndSelect("p.emailSharingImage", "esi")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "ps.subjectId = s.id")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
@@ -651,6 +665,7 @@ export default class PhotoResolver {
       relations: [
         "images",
         "sharingImage",
+        "emailSharingImage",
         "photographer",
         "photographer.coverImage",
         "location",
@@ -676,6 +691,7 @@ export default class PhotoResolver {
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.sharingImage", "si")
+      .leftJoinAndSelect("p.emailSharingImage", "esi")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")

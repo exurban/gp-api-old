@@ -272,6 +272,9 @@ type Photo {
 
   # A 1,200px x 630px image for sharing.
   sharingImage: Image
+
+  # A jpg image for sharing.
+  emailSharingImage: Image
   subjectsInPhoto: [PhotoSubject!]
   tagsForPhoto: [PhotoTag!]
   collectionsForPhoto: [PhotoCollection!]
@@ -993,6 +996,7 @@ input AddPhotoInput {
   collectionIds: [Int!]
   imageId: Int
   sharingImageId: Int
+  emailSharingImageId: Int
 }
 
 input UpdatePhotoInput {
@@ -1014,6 +1018,7 @@ input UpdatePhotoInput {
   priceModifier30: Float = 1
   imageId: Int
   sharingImageId: Int
+  emailSharingImageId: Int
   photographerId: Int
   locationId: Int
   subjectIds: [Int!]

@@ -159,6 +159,14 @@ export default class Photo extends BaseEntity {
   @JoinColumn()
   sharingImage?: Image;
 
+  @Field(() => Image, {
+    description: "A jpg image for sharing.",
+    nullable: true,
+  })
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  emailSharingImage?: Image;
+
   @Field(() => [PhotoSubject], { nullable: true })
   @OneToMany(() => PhotoSubject, (ps) => ps.photo)
   subjectsInPhoto: PhotoSubject[];
