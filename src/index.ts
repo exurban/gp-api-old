@@ -80,56 +80,56 @@ const getUser = async (token: string): Promise<User | undefined> => {
 //   console.log("Connected to database");
 // });
 
-// const connectToRemoteDB = async () => {
-//   console.log(`connecting to remote at ${process.env.DATABASE_URL}`);
-//   const connection = await createConnection({
-//     type: "postgres",
-//     synchronize: true,
-//     logging: false,
-//     namingStrategy: new SnakeNamingStrategy(),
-//     name: "default",
-//     url: process.env.DATABASE_URL,
-//     ssl: true,
-//     extra: {
-//       ssl: {
-//         rejectUnauthorized: false,
-//       },
-//     },
-//     entities: ["dist/entities/*{.ts,.js}"],
-//   });
-
-//   if (connection) {
-//     console.log(`Connected to remote db.`);
-//   }
-// };
-
-const connectToLocalDB = async () => {
-  console.log(`connecting to local db`);
+const connectToRemoteDB = async () => {
+  console.log(`connecting to remote at ${process.env.DATABASE_URL}`);
   const connection = await createConnection({
     type: "postgres",
     synchronize: true,
     logging: false,
     namingStrategy: new SnakeNamingStrategy(),
     name: "default",
-    host: "localhost",
-    port: 5432,
-    username: "postgres",
-    password: "postgres",
-    database: "photos",
-    entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+    url: process.env.DATABASE_URL,
+    ssl: true,
+    extra: {
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
+    entities: ["dist/entities/*{.ts,.js}"],
   });
 
   if (connection) {
-    console.log(`Connected to local db.`);
+    console.log(`Connected to remote db.`);
   }
 };
+
+// const connectToLocalDB = async () => {
+//   console.log(`connecting to local db`);
+//   const connection = await createConnection({
+//     type: "postgres",
+//     synchronize: true,
+//     logging: false,
+//     namingStrategy: new SnakeNamingStrategy(),
+//     name: "default",
+//     host: "localhost",
+//     port: 5432,
+//     username: "postgres",
+//     password: "postgres",
+//     database: "photos",
+//     entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+//   });
+
+//   if (connection) {
+//     console.log(`Connected to local db.`);
+//   }
+// };
 
 const main = async () => {
   // * Connect to Database
   useContainer(Container);
 
-  await connectToLocalDB();
-  // await connectToRemoteDB();
+  // await connectToLocalDB();
+  await connectToRemoteDB();
 
   const schema = await buildSchema({
     resolvers: [__dirname + "/resolvers/**/*.{ts,js}"],
