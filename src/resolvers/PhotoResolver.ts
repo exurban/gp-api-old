@@ -793,6 +793,17 @@ export default class PhotoResolver {
       newPhoto.sharingImage = img;
     }
 
+    if (input.emailSharingImageId) {
+      const img = await this.imageRepository.findOne(input.emailSharingImageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find image with id ${input.emailSharingImageId}`,
+        };
+      }
+      newPhoto.emailSharingImage = img;
+    }
+
     if (input.photographerId) {
       const pg = await this.photographerRepository.findOne(
         input.photographerId
@@ -942,6 +953,17 @@ export default class PhotoResolver {
         };
       }
       photo.sharingImage = img;
+    }
+
+    if (input.emailSharingImageId) {
+      const img = await this.imageRepository.findOne(input.emailSharingImageId);
+      if (!img) {
+        return {
+          success: false,
+          message: `Failed to find email sharing image with id ${input.emailSharingImageId}`,
+        };
+      }
+      photo.emailSharingImage = img;
     }
 
     if (input.photographerId) {
