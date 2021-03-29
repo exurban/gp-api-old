@@ -82,6 +82,18 @@ class UpdateImageResponse extends SuccessMessageResponse {
   updatedImage?: Image;
 }
 
+@InputType()
+class SearchImagesInput {
+  @Field()
+  searchString: string;
+}
+
+@ObjectType()
+class SearchImagesResponse {
+  @Field(() => [Image])
+  datalist: Image[];
+}
+
 @Resolver(() => Image)
 export default class ImageResolver {
   // * Repositories
@@ -105,6 +117,36 @@ export default class ImageResolver {
       relations: ["photo"],
     });
     return image;
+  }
+
+  @Query(() => SearchImagesResponse)
+  async searchImages(
+    @Arg("input", () => SearchImagesInput) input: SearchImagesInput
+  ): Promise<SearchImagesResponse> {
+    const searchString = input.searchString;
+
+    const imgs = await this.imageRepository
+      .createQueryBuilder("i")
+      .where("i.imageName ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("i.imageUrl ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("i.altText ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("i.aspectRatio ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .orWhere("i.photo.sku ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
+      .getMany();
+
+    const response = { datalist: imgs };
+
+    return response;
   }
 
   // * Mutations
