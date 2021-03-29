@@ -888,7 +888,9 @@ export default class PhotoResolver {
       };
     }
 
-    console.log(`updating photo ${photo.id} with input: ${input}`);
+    console.log(
+      `updating photo ${photo.id} with input: ${JSON.stringify(input, null, 2)}`
+    );
 
     photo.title = input.title || photo.title;
     photo.description = input.description || photo.description;
