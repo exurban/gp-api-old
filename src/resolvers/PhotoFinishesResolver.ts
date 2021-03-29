@@ -167,6 +167,7 @@ export default class PhotoFinishesResolver {
       .leftJoinAndSelect("p.photographer", "pg")
       .leftJoinAndSelect("p.images", "i")
       .leftJoinAndSelect("p.sharingImage", "si")
+      .leftJoinAndSelect("p.emailSharingImage", "esi")
       .leftJoinAndSelect("p.subjectsInPhoto", "ps")
       .leftJoinAndSelect("ps.subject", "s", "s.id = ps.subjectId")
       .leftJoinAndSelect("p.tagsForPhoto", "pt")
