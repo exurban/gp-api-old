@@ -130,6 +130,9 @@ export default class ImageResolver {
       .where("i.imageName ilike :searchString", {
         searchString: `%${searchString}%`,
       })
+      .orWhere("i.id ilike :searchString", {
+        searchString: `%${searchString}%`,
+      })
       .orWhere("i.imageUrl ilike :searchString", {
         searchString: `%${searchString}%`,
       })
