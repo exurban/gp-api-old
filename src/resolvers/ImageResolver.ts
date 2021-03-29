@@ -142,10 +142,21 @@ export default class ImageResolver {
       .orWhere("i.aspectRatio ilike :searchString", {
         searchString: `%${searchString}%`,
       })
-      .orWhere("i.photo.sku ilike :searchString", {
-        searchString: `%${searchString}%`,
-      })
+
       .getMany();
+
+    if (parseInt(searchString)) {
+      const searchInt = parseInt(searchString);
+
+      const intIs = await this.imageRepository
+        .createQueryBuilder("i")
+        .where("i.photo.sku ilike :searchInt", {
+          searchInt: `%${searchInt}%`,
+        })
+        .getMany();
+
+      imgs.concat(intIs);
+    }
 
     const response = { datalist: imgs };
 
