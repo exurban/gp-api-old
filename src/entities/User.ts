@@ -12,6 +12,7 @@ import {
 
 import UserFavorite from "./UserFavorite";
 import Product from "./Product";
+import Order from "./Order";
 
 @ObjectType()
 @Entity({ name: "users" })
@@ -54,6 +55,10 @@ export default class User extends BaseEntity {
   @Field(() => [UserFavorite])
   @OneToMany(() => UserFavorite, (fav) => fav.user)
   userFavorites: Promise<UserFavorite[]>;
+
+  @Field(() => [Order])
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Promise<Order[]>;
 
   @Field(() => [Product], { nullable: true })
   @OneToMany(() => Product, (product) => product.shoppingBag, {

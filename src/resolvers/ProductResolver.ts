@@ -81,6 +81,22 @@ export default class ProductResolver {
   ) {}
 
   @FieldResolver()
+  async productSummary(@Root() product: Product) {
+    const material =
+      product.print.type === "paper" ? "exhibition paper" : "aluminum";
+
+    let summary = `${product.photo.title}, printed on ${material}`;
+    if (product.mat) {
+      summary = summary + ` with a ${product.mat.color} mat`;
+    }
+    if (product.frame) {
+      summary += ` in a ${product.frame.color} ${product.frame.material}`;
+    }
+
+    return summary;
+  }
+
+  @FieldResolver()
   async totalRetailPrice(@Root() product: Product) {
     const dim1 = product.print.dimension1;
 

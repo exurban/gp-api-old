@@ -14,6 +14,7 @@ import Print from "./Print";
 import Mat from "./Mat";
 import Frame from "./Frame";
 import User from "./User";
+import Order from "./Order";
 
 @ObjectType()
 @Entity({ name: "products" })
@@ -53,6 +54,11 @@ export default class Product extends BaseEntity {
   })
   @JoinColumn()
   shoppingBag?: User;
+
+  @Field(() => Order)
+  @ManyToOne(() => Order, (order) => order.products)
+  @JoinColumn()
+  order: Order;
 
   @Field(() => Float)
   totalRetailPrice: number;
