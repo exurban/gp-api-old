@@ -19,6 +19,6 @@ export enum OrderStatus {
 }
 
 registerEnumType(OrderStatus, {
-  name: "Order Status",
+  name: "OrderStatus",
   description: "Order status",
 });
