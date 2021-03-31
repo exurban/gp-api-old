@@ -80,7 +80,7 @@ export default class ProductResolver {
     @InjectRepository(User) private userRepository: Repository<User>
   ) {}
 
-  @FieldResolver()
+  @FieldResolver(() => String)
   async productSummary(@Root() product: Product) {
     const material =
       product.print.type === "paper" ? "exhibition paper" : "aluminum";
