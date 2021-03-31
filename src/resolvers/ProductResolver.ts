@@ -90,7 +90,7 @@ export default class ProductResolver {
       summary = summary + ` with a ${product.mat.color} mat`;
     }
     if (product.frame) {
-      summary += ` in a ${product.frame.color} ${product.frame.material}`;
+      summary += ` in a ${product.frame.color} ${product.frame.material} frame.`;
     }
 
     return summary;
