@@ -15,7 +15,7 @@ import { authChecker } from "./auth-checker";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
 
-import * as bodyParser from "body-parser";
+// import * as bodyParser from "body-parser";
 import Stripe from "stripe";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -184,7 +184,7 @@ const main = async () => {
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  app.post("/webhook", bodyParser.json, (request, response) => {
+  app.post("/webhooks", (request, response) => {
     console.log(`got something`);
     const payload = request.body;
 
