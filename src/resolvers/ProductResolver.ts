@@ -84,8 +84,13 @@ export default class ProductResolver {
   async productSummary(@Root() product: Product) {
     const material =
       product.print.type === "paper" ? "exhibition paper" : "aluminum";
+    const isPortrait =
+      product.photo.images[0].height > product.photo.images[0].width;
+    const dimensions = isPortrait
+      ? `${product.print.dimension1}" w x ${product.print.dimension2}" h`
+      : `${product.print.dimension2}" w x ${product.print.dimension1}" h`;
 
-    let summary = `${product.photo.title}, printed on ${material}`;
+    let summary = `${product.photo.title}, ${dimensions}, printed on ${material}`;
     if (product.mat) {
       summary = summary + ` with a ${product.mat.color} mat`;
     }
