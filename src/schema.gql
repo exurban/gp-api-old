@@ -227,6 +227,38 @@ type Frame {
   updatedAt: DateTime!
 }
 
+type Address {
+  id: ID!
+  line1: String!
+  line2: String!
+  city: String!
+  state: String!
+  country: String!
+  postalCode: String!
+  orders: [Order!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Order {
+  id: ID!
+  orderStatus: OrderStatus!
+  products: [Product!]!
+  shipToAddress: Address!
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# Order status
+enum OrderStatus {
+  PAID
+  PLACED
+  SHIPPED
+  FULFILLED
+  PROBLEM
+}
+
 type Product {
   id: ID!
   photo: Photo!
@@ -234,9 +266,11 @@ type Product {
   mat: Mat
   frame: Frame
   shoppingBag: User
+  order: Order!
   totalRetailPrice: Float!
   createdAt: DateTime!
   updatedAt: DateTime!
+  productSummary: String!
 }
 
 type Photo {
@@ -300,6 +334,7 @@ type User {
   roles: [String!]!
   isSubscribed: Boolean!
   userFavorites: [UserFavorite!]!
+  orders: [Order!]!
   shoppingBagItems: [Product!]
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -358,6 +393,10 @@ type UpdateImageResponse {
   success: Boolean!
   message: String!
   updatedImage: Image
+}
+
+type SearchImagesResponse {
+  datalist: [Image!]!
 }
 
 type PaginatedResponse {
@@ -795,6 +834,10 @@ input UpdateImageInput {
   photoId: Float
 }
 
+input SearchImagesInput {
+  searchString: String!
+}
+
 # Inputs to create a new Location entity.
 input AddLocationInput {
   # Name of the location.
@@ -1201,6 +1244,7 @@ type Query {
   frame(id: Int!): Frame!
   images: [Image!]!
   image(id: Int!): Image!
+  searchImages(input: SearchImagesInput!): SearchImagesResponse!
 
   # Returns all Locations + cover images. Sortable and filterable.
   locations(input: LocationSearchSortInput!): LocationsResponse!
