@@ -16,14 +16,14 @@ import User from "./entities/User";
 import * as dotenv from "dotenv";
 
 // import * as bodyParser from "body-parser";
-import Stripe from "stripe";
+// import Stripe from "stripe";
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2020-08-27",
-});
-// const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
-const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
+// // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+//   apiVersion: "2020-08-27",
+// });
+// // const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
+// const endpointSecret = "whsec_k4rhhlX2iZlbPfihhxMgdEX1AAxCAJcG";
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -126,7 +126,7 @@ const connectToRemoteDB = async () => {
 //     username: "postgres",
 //     password: "postgres",
 //     database: "photos",
-//     entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
+//     entities: ["entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
 //   });
 
 //   if (connection) {
@@ -178,37 +178,37 @@ const main = async () => {
 
   const app = Express();
 
-  const fulfillOrder = (session: Stripe.Event.Data.Object) => {
-    console.log(`fulfilling order: `, session);
-  };
+  // const fulfillOrder = (session: Stripe.Event.Data.Object) => {
+  //   console.log(`fulfilling order: `, session);
+  // };
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  app.post("/webhooks", (request, response) => {
-    console.log(`got something`);
-    const payload = request.body;
+  // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // // @ts-ignore
+  // app.post("/webhooks", (request, response) => {
+  //   console.log(`got something`);
+  //   const payload = request.body;
 
-    const sig = request.headers["stripe-signature"];
+  //   const sig = request.headers["stripe-signature"];
 
-    let event;
+  //   let event;
 
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      event = stripe.webhooks.constructEvent(payload, sig!, endpointSecret!);
-    } catch (err) {
-      return response.status(400).send(`Webhook Error: ${err.message}`);
-    }
+  //   try {
+  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //     event = stripe.webhooks.constructEvent(payload, sig!, endpointSecret!);
+  //   } catch (err) {
+  //     return response.status(400).send(`Webhook Error: ${err.message}`);
+  //   }
 
-    // Handle the checkout.session.completed event
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+  //   // Handle the checkout.session.completed event
+  //   if (event.type === "checkout.session.completed") {
+  //     const session = event.data.object;
 
-      // Fulfill the purchase...
-      fulfillOrder(session);
-    }
+  //     // Fulfill the purchase...
+  //     fulfillOrder(session);
+  //   }
 
-    response.status(200);
-  });
+  //   response.status(200);
+  // });
   // const corsOptions = {
   //   origin: "http://localhost:3000",
   //   credentials: false,
