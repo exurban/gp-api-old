@@ -23,7 +23,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2020-08-27",
 });
 // const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
-const endpointSecret = "whsec_k4rhhlX2iZlbPfihhxMgdEX1AAxCAJcG";
+const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
