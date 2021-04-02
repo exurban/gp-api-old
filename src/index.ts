@@ -158,7 +158,7 @@ const main = async () => {
     // Stripe requires the raw body to construct the event
     bodyParser.raw({ type: "application/json" }),
     (req: express.Request, res: express.Response): void => {
-      console.log(`incoming...`);
+      // console.log(`incoming...`);
       const sig = req.headers["stripe-signature"];
 
       let event: Stripe.Event;
@@ -180,6 +180,8 @@ const main = async () => {
         const stripeObject: Stripe.Checkout.Session = event.data
           .object as Stripe.Checkout.Session;
         console.log(`Checkout Session: ${stripeObject.line_items}`);
+      } else {
+        console.warn(`unhandled event type: ${event.type}`);
       }
 
       // // Cast event data to Stripe object
