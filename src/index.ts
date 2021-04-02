@@ -1,29 +1,26 @@
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
-import Express from "express";
-// import cors from "cors";
+import express from "express";
+
 import jwt from "jsonwebtoken";
 import { buildSchema } from "type-graphql";
 import { Container } from "typedi";
 import { createConnection, useContainer } from "typeorm";
-// import { ConnectionOptions, createConnection } from "typeorm";
-// import { createConnection } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { authChecker } from "./auth-checker";
 
-// import Account from "./entities/Account";
 import User from "./entities/User";
 import * as dotenv from "dotenv";
 
-// import * as bodyParser from "body-parser";
+import bodyParser from "body-parser";
 import Stripe from "stripe";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2020-08-27",
 });
-// const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
-const endpointSecret = "whsec_4LGsxs9oeTjgCe6wJaquBWf8o3WQACwz";
+// const webhookSecret: string = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
+const webhookSecret = "whsec_4LGsxs9oeTjgCe6wJaquBWf8o3WQACwz";
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -52,43 +49,6 @@ const getUser = async (token: string): Promise<User | undefined> => {
   }
   return undefined;
 };
-
-// const getOptions = async () => {
-//   const connectionOptions: ConnectionOptions = {
-//     type: "postgres",
-//     synchronize: true,
-//     logging: false,
-//     namingStrategy: new SnakeNamingStrategy(),
-//   };
-//   if (process.env.NODE_ENV === "production") {
-//     Object.assign(connectionOptions, {
-//       url: process.env.DATABASE_URL,
-//       entities: ["dist/entities/*{.ts,.js}"],
-//     });
-//   } else {
-//     Object.assign(connectionOptions, {
-//       name: "default",
-//       host: "localhost",
-//       port: 5432,
-//       username: "postgres",
-//       password: "postgres",
-//       database: "photos",
-//       entities: ["src/entities/*{.ts,.js}", "dist/entities/*{.ts,.js}"],
-//     });
-//   }
-
-//   return connectionOptions;
-// };
-
-// const connect2Database = async (): Promise<void> => {
-//   console.log(`Connecting to DB`);
-//   const typeormconfig = await getOptions();
-//   await createConnection(typeormconfig);
-// };
-
-// connect2Database().then(async () => {
-//   console.log("Connected to database");
-// });
 
 const connectToRemoteDB = async () => {
   console.log(`connecting to remote at ${process.env.DATABASE_URL}`);
@@ -176,39 +136,68 @@ const main = async () => {
     },
   });
 
-  const app = Express();
+  const app = express();
 
-  const fulfillOrder = (session: Stripe.Event.Data.Object) => {
-    console.log(`fulfilling order: `, session);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  app.post("/webhooks", (request, response) => {
-    console.log(`got something`);
-    const payload = request.body;
-
-    const sig = request.headers["stripe-signature"];
-
-    let event;
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      event = stripe.webhooks.constructEvent(payload, sig!, endpointSecret!);
-    } catch (err) {
-      return response.status(400).send(`Webhook Error: ${err.message}`);
+  // Use JSON parser for all non-webhook routes
+  app.use(
+    (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ): void => {
+      if (req.originalUrl === "/webhook") {
+        next();
+      } else {
+        bodyParser.json()(req, res, next);
+      }
     }
+  );
 
-    // Handle the checkout.session.completed event
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+  app.post(
+    "/webhook",
+    // Stripe requires the raw body to construct the event
+    bodyParser.raw({ type: "application/json" }),
+    (req: express.Request, res: express.Response): void => {
+      console.log(`incoming...`);
+      const sig = req.headers["stripe-signature"];
 
-      // Fulfill the purchase...
-      fulfillOrder(session);
+      let event: Stripe.Event;
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        event = stripe.webhooks.constructEvent(req.body, sig!, webhookSecret);
+      } catch (err) {
+        // On error, log and return the error message
+        console.log(`❌ Error message: ${err.message}`);
+        res.status(400).send(`Webhook Error: ${err.message}`);
+        return;
+      }
+
+      // Successfully constructed event
+      console.log("✅ Success:", event.id);
+
+      if (event.type === "checkout.session.completed") {
+        const stripeObject: Stripe.Checkout.Session = event.data
+          .object as Stripe.Checkout.Session;
+        console.log(`Checkout Session: ${stripeObject.line_items}`);
+      }
+
+      // // Cast event data to Stripe object
+      // if (event.type === "payment_intent.succeeded") {
+      //   const stripeObject: Stripe.PaymentIntent = event.data
+      //     .object as Stripe.PaymentIntent;
+      //   console.log(`💰 PaymentIntent status: ${stripeObject.status}`);
+      // } else if (event.type === "charge.succeeded") {
+      //   const charge = event.data.object as Stripe.Charge;
+      //   console.log(`💵 Charge id: ${charge.id}`);
+      // } else {
+      //   console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
+      // }
+
+      // Return a response to acknowledge receipt of the event
+      res.json({ received: true });
     }
-
-    response.status(200);
-  });
+  );
 
   // const corsOptions = {
   //   origin: "http://localhost:3000",
