@@ -119,17 +119,17 @@ const main = async () => {
     playground: true,
     context: async ({ req }) => {
       let user;
-      // console.log(`rec'd req with body: ${JSON.stringify(req.body, null, 2)}`);
+      console.log(`rec'd req with body: ${JSON.stringify(req.body, null, 2)}`);
       if (
         req.headers.authorization &&
         req.headers.authorization.split(" ")[0] === "Bearer"
       ) {
         const token = req.headers.authorization.split(" ")[1] as string;
-        // console.log(`token: ${JSON.stringify(token, null, 2)}`);
+        console.log(`token: ${JSON.stringify(token, null, 2)}`);
         user = await getUser(token);
-        // console.log(`put user on the context ${JSON.stringify(user, null, 2)}`);
+        console.log(`put user on the context ${JSON.stringify(user, null, 2)}`);
       } else {
-        // console.log(`No bearer token found in headers.`);
+        console.log(`No bearer token found in headers.`);
       }
 
       return { req, user };
