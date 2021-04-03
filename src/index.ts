@@ -177,9 +177,9 @@ const main = async () => {
       console.log("✅ Success:", event.id);
 
       if (event.type === "checkout.session.completed") {
-        const stripeObject: Stripe.Checkout.Session = event.data
+        const checkoutSession: Stripe.Checkout.Session = event.data
           .object as Stripe.Checkout.Session;
-        console.log(`Checkout Session: ${stripeObject.line_items}`);
+        console.log(`Checkout Session: ${checkoutSession.amount_total}`);
       } else {
         console.warn(`unhandled event type: ${event.type}`);
       }
